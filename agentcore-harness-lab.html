@@ -1,0 +1,2667 @@
+<title>AgentCore Harness &#x2014; Hands-On Lab</title>
+
+<style>
+:root{
+  --ink:#101a1d; --paper:#eef1f0; --surface:#ffffff; --surface-2:#e6ebea;
+  --rule:#c9d3d1; --rule-soft:#dde4e2;
+  --text:#101a1d; --text-2:#42565a; --text-3:#6b8085;
+  --accent:#0b6e6e; --accent-soft:#d8ecea; --accent-line:#8fc4c0;
+  --signal:#a8531c; --signal-soft:#f7e7da;
+  --ok:#2f7a4f; --ok-soft:#dcece2;
+  --code-bg:#0f1c1f; --code-text:#d6e4e2; --code-rule:#24393d;
+  --mono:ui-monospace,"SF Mono","JetBrains Mono","Cascadia Mono",Menlo,Consolas,monospace;
+  --serif:Charter,"Bitstream Charter","Iowan Old Style","Palatino Linotype",Georgia,serif;
+  --rail:264px;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --ink:#e4edeb; --paper:#0b1214; --surface:#111d20; --surface-2:#16262a;
+    --rule:#274045; --rule-soft:#1d3135;
+    --text:#dde8e6; --text-2:#a0b5b8; --text-3:#7b9296;
+    --accent:#4dbdb2; --accent-soft:#12312f; --accent-line:#2c6d68;
+    --signal:#e09b5e; --signal-soft:#2e2115;
+    --ok:#5cb884; --ok-soft:#13291d;
+    --code-bg:#08100f; --code-text:#cfdedd; --code-rule:#1c2f31;
+  }
+}
+:root[data-theme="dark"]{
+  --ink:#e4edeb; --paper:#0b1214; --surface:#111d20; --surface-2:#16262a;
+  --rule:#274045; --rule-soft:#1d3135;
+  --text:#dde8e6; --text-2:#a0b5b8; --text-3:#7b9296;
+  --accent:#4dbdb2; --accent-soft:#12312f; --accent-line:#2c6d68;
+  --signal:#e09b5e; --signal-soft:#2e2115;
+  --ok:#5cb884; --ok-soft:#13291d;
+  --code-bg:#08100f; --code-text:#cfdedd; --code-rule:#1c2f31;
+}
+:root[data-theme="light"]{
+  --ink:#101a1d; --paper:#eef1f0; --surface:#ffffff; --surface-2:#e6ebea;
+  --rule:#c9d3d1; --rule-soft:#dde4e2;
+  --text:#101a1d; --text-2:#42565a; --text-3:#6b8085;
+  --accent:#0b6e6e; --accent-soft:#d8ecea; --accent-line:#8fc4c0;
+  --signal:#a8531c; --signal-soft:#f7e7da;
+  --ok:#2f7a4f; --ok-soft:#dcece2;
+  --code-bg:#0f1c1f; --code-text:#d6e4e2; --code-rule:#24393d;
+}
+
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--text);font-family:var(--serif);
+  font-size:17px;line-height:1.65;margin:0;-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4{font-family:var(--mono);font-weight:600;text-wrap:balance;letter-spacing:-.01em;margin:0}
+a{color:var(--accent);text-underline-offset:3px}
+code{font-family:var(--mono);font-size:.87em}
+p code,li code,td code{background:var(--surface-2);border:1px solid var(--rule-soft);
+  border-radius:3px;padding:.08em .34em;color:var(--text)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:2px}
+
+/* ---------- shell ---------- */
+.shell{display:grid;grid-template-columns:var(--rail) minmax(0,1fr);align-items:start}
+.rail{position:sticky;top:0;height:100vh;overflow-y:auto;border-right:1px solid var(--rule);
+  background:var(--surface);padding:22px 0 40px;display:flex;flex-direction:column;gap:18px}
+.rail-head{padding:0 20px;display:flex;flex-direction:column;gap:9px}
+.rail-mark{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent)}
+.rail-title{font-family:var(--mono);font-size:14px;line-height:1.35;color:var(--text)}
+.meter{display:flex;flex-direction:column;gap:6px;padding:0 20px}
+.meter-bar{height:3px;background:var(--surface-2);border-radius:2px;overflow:hidden}
+.meter-fill{height:100%;width:0;background:var(--accent);transition:width .3s ease}
+.meter-txt{font-family:var(--mono);font-size:10.5px;color:var(--text-3);
+  letter-spacing:.06em;font-variant-numeric:tabular-nums}
+nav ol{list-style:none;margin:0;padding:0}
+nav a{display:grid;grid-template-columns:26px 1fr;gap:8px;align-items:baseline;
+  padding:6px 20px;font-family:var(--mono);font-size:12.5px;line-height:1.4;
+  color:var(--text-2);text-decoration:none;border-left:2px solid transparent}
+nav a:hover{color:var(--text);background:var(--surface-2)}
+nav a.on{color:var(--accent);border-left-color:var(--accent);background:var(--accent-soft)}
+nav a .n{color:var(--text-3);font-variant-numeric:tabular-nums;font-size:11px}
+nav a.on .n{color:var(--accent)}
+nav a.done .n::after{content:"\2713";margin-left:3px;color:var(--ok)}
+.rail-foot{padding:0 20px;margin-top:auto;display:flex;flex-direction:column;gap:10px}
+.tbtn{font-family:var(--mono);font-size:11px;letter-spacing:.06em;padding:6px 10px;
+  background:var(--surface-2);border:1px solid var(--rule);color:var(--text-2);
+  border-radius:4px;cursor:pointer;text-align:left}
+.tbtn:hover{border-color:var(--accent-line);color:var(--text)}
+
+main{padding:0 0 120px;min-width:0}
+.wrap{max-width:980px;margin:0 auto;padding:0 40px}
+.col{max-width:72ch}
+
+/* ---------- masthead ---------- */
+.mast{border-bottom:1px solid var(--rule);padding:64px 0 40px;margin-bottom:52px;
+  background:linear-gradient(180deg,var(--surface) 0%,var(--paper) 100%)}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--accent);margin:0 0 18px}
+h1{font-size:clamp(30px,4.4vw,46px);line-height:1.08;letter-spacing:-.02em;margin:0 0 20px}
+.standfirst{font-size:19px;line-height:1.6;color:var(--text-2);max-width:64ch;margin:0}
+.facts{display:flex;flex-wrap:wrap;gap:0;margin-top:34px;border:1px solid var(--rule);
+  border-radius:5px;overflow:hidden;background:var(--surface)}
+.fact{flex:1 1 150px;padding:13px 16px;border-right:1px solid var(--rule-soft)}
+.fact:last-child{border-right:0}
+.fact dt{font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--text-3);margin:0 0 4px}
+.fact dd{font-family:var(--mono);font-size:13px;margin:0;color:var(--text)}
+
+/* ---------- sections ---------- */
+section{scroll-margin-top:20px;padding-bottom:8px}
+.lab-head{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:start;
+  padding-top:56px;margin-bottom:22px;border-top:1px solid var(--rule)}
+.lab-n{font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:.1em;
+  color:var(--accent);background:var(--accent-soft);border:1px solid var(--accent-line);
+  border-radius:3px;padding:5px 9px;margin-top:6px;font-variant-numeric:tabular-nums}
+h2{font-size:clamp(22px,2.6vw,29px);line-height:1.18}
+.lab-sub{font-family:var(--mono);font-size:11.5px;color:var(--text-3);
+  letter-spacing:.04em;margin:7px 0 0}
+h3{font-size:17px;margin:38px 0 12px;letter-spacing:0}
+h4{font-size:14px;margin:26px 0 8px;color:var(--text-2);letter-spacing:.02em}
+p{margin:0 0 15px;max-width:72ch}
+ul,ol{max-width:72ch;margin:0 0 15px;padding-left:22px}
+li{margin-bottom:7px}
+
+/* goal block */
+.goal{border-left:2px solid var(--accent);background:var(--surface);padding:14px 18px;
+  margin:0 0 26px;max-width:72ch;border-radius:0 4px 4px 0}
+.goal p{margin:0;font-size:16px;color:var(--text-2)}
+.goal strong{color:var(--text);font-family:var(--mono);font-size:13px;
+  letter-spacing:.04em;display:block;margin-bottom:5px;font-weight:600}
+
+/* steps */
+.step{font-family:var(--mono);font-size:11px;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--text-3);display:flex;align-items:center;gap:9px;margin:32px 0 11px}
+.step::after{content:"";flex:1;height:1px;background:var(--rule-soft)}
+
+/* ---------- code ---------- */
+.code{margin:0 0 18px;border:1px solid var(--code-rule);border-radius:5px;
+  overflow:hidden;background:var(--code-bg)}
+.code-bar{display:flex;align-items:center;gap:8px;padding:6px 8px 6px 12px;
+  background:rgba(255,255,255,.035);border-bottom:1px solid var(--code-rule)}
+.code-lang{font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;
+  color:#7fa6a3;margin-right:auto}
+.copy{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;
+  background:transparent;border:1px solid var(--code-rule);color:#8fb3b0;
+  padding:4px 9px;border-radius:3px;cursor:pointer}
+.copy:hover{border-color:#4dbdb2;color:#7fd8cf}
+.copy.done{color:#7fd8cf;border-color:#4dbdb2}
+pre{margin:0;padding:14px 16px;overflow-x:auto;background:var(--code-bg)}
+pre code{font-size:12.9px;line-height:1.62;color:var(--code-text);white-space:pre;
+  background:none;border:0;padding:0}
+.cm{color:#68908d}
+.st{color:#c2b280}
+.kw{color:#6fc2b8}
+.va{color:#d8a26a}
+
+/* tabs */
+.tabs{margin:0 0 20px}
+.tabstrip{display:flex;gap:2px;border-bottom:1px solid var(--rule);margin-bottom:0}
+.tabstrip button{font-family:var(--mono);font-size:11px;letter-spacing:.07em;
+  text-transform:uppercase;background:transparent;border:0;border-bottom:2px solid transparent;
+  color:var(--text-3);padding:8px 13px;cursor:pointer;margin-bottom:-1px}
+.tabstrip button:hover{color:var(--text-2)}
+.tabstrip button.on{color:var(--accent);border-bottom-color:var(--accent)}
+.tabpanel{display:none;padding-top:14px}
+.tabpanel.on{display:block}
+
+/* callouts */
+.note,.warn,.tip{border:1px solid var(--rule);border-left-width:2px;border-radius:0 4px 4px 0;
+  padding:12px 16px;margin:0 0 20px;max-width:72ch;font-size:15.5px;background:var(--surface)}
+.note{border-left-color:var(--accent)}
+.warn{border-left-color:var(--signal);background:var(--signal-soft);border-color:var(--signal-soft)}
+.tip{border-left-color:var(--text-3)}
+.note p:last-child,.warn p:last-child,.tip p:last-child{margin-bottom:0}
+.note b,.warn b,.tip b{font-family:var(--mono);font-size:11px;letter-spacing:.11em;
+  text-transform:uppercase;display:block;margin-bottom:5px}
+.note b{color:var(--accent)} .warn b{color:var(--signal)} .tip b{color:var(--text-3)}
+
+/* checkpoint */
+.ck{display:grid;grid-template-columns:auto 1fr;gap:13px;align-items:start;
+  border:1px solid var(--ok);background:var(--ok-soft);border-radius:5px;
+  padding:14px 17px;margin:26px 0 8px;max-width:72ch}
+.ck input{appearance:none;width:19px;height:19px;border:1.5px solid var(--ok);
+  border-radius:3px;cursor:pointer;margin:3px 0 0;background:var(--surface);flex:none}
+.ck input:checked{background:var(--ok)}
+.ck input:checked::after{content:"\2713";color:var(--paper);display:block;text-align:center;
+  font-size:13px;line-height:16px;font-family:var(--mono)}
+.ck-body{min-width:0}
+.ck-t{font-family:var(--mono);font-size:11px;letter-spacing:.11em;text-transform:uppercase;
+  color:var(--ok);margin:0 0 4px}
+.ck-body p{margin:0;font-size:15.5px;color:var(--text-2)}
+
+/* tables */
+.tw{overflow-x:auto;margin:0 0 20px;border:1px solid var(--rule);border-radius:5px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:14px;min-width:520px}
+th{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;
+  text-align:left;color:var(--text-3);padding:10px 14px;border-bottom:1px solid var(--rule);
+  background:var(--surface-2);white-space:nowrap}
+td{padding:9px 14px;border-bottom:1px solid var(--rule-soft);vertical-align:top;color:var(--text-2)}
+tr:last-child td{border-bottom:0}
+td code{white-space:nowrap}
+td:first-child{color:var(--text)}
+
+/* misc */
+.kicker{font-family:var(--mono);font-size:11px;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--text-3);margin:0 0 10px}
+.end{border-top:1px solid var(--rule);margin-top:64px;padding-top:26px;
+  font-family:var(--mono);font-size:12px;color:var(--text-3)}
+.end a{color:var(--text-2)}
+
+@media (max-width:960px){
+  .shell{grid-template-columns:1fr}
+  .rail{position:static;height:auto;border-right:0;border-bottom:1px solid var(--rule)}
+  nav ol{display:flex;flex-wrap:wrap;gap:2px;padding:0 14px}
+  nav a{border-left:0;border-bottom:2px solid transparent;padding:5px 9px;grid-template-columns:auto}
+  nav a .t{display:none}
+  nav a.on{border-left-color:transparent;border-bottom-color:var(--accent)}
+  .rail-foot{margin-top:14px}
+  .wrap{padding:0 22px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div class="shell">
+<aside class="rail">
+  <div class="rail-head">
+    <div class="rail-mark">AWS Bedrock AgentCore</div>
+    <div class="rail-title">Managed Agent Harness<br>Hands-On Lab</div>
+  </div>
+  <div class="meter">
+    <div class="meter-bar"><div class="meter-fill" id="mfill"></div></div>
+    <div class="meter-txt"><span id="mtxt">0 / 0</span> checkpoints cleared</div>
+  </div>
+  <nav>
+    <ol id="nav"></ol>
+  </nav>
+  <div class="rail-foot">
+    <button class="tbtn" id="reset">Reset progress</button>
+  </div>
+</aside>
+
+<main>
+<header class="mast">
+  <div class="wrap">
+    <p class="eyebrow">Hands-on lab &#xB7; 12 exercises &#xB7; Live AWS account</p>
+    <h1>Build, run and operate an agent on the AgentCore harness</h1>
+    <p class="standfirst">The harness is the orchestration loop &#x2014; model calls, tool selection, context management, failure handling &#x2014; delivered as a managed service. You declare what the agent <em>is</em>; AWS runs the loop inside an isolated microVM. This lab takes you from an empty account to a versioned, observable, VPC-attached agent, then exports it to code.</p>
+    <dl class="facts">
+      <div class="fact"><dt>Region</dt><dd>us-west-2</dd></div>
+      <div class="fact"><dt>Time</dt><dd>3&#x2013;4 hours</dd></div>
+      <div class="fact"><dt>Cost</dt><dd>Pay-per-use</dd></div>
+      <div class="fact"><dt>Prereqs</dt><dd>Node 20+ &#xB7; Python 3.10+</dd></div>
+      <div class="fact"><dt>Cleanup</dt><dd>Lab 12</dd></div>
+    </dl>
+  </div>
+</header>
+
+<div class="wrap">
+
+<section id="intro">
+  <div class="col">
+  <p class="kicker">Read this first</p>
+  <h3 style="margin-top:0">What you are actually building</h3>
+  <p>Across twelve labs you build one agent &#x2014; a research assistant &#x2014; and progressively attach every harness capability to it: models you can swap mid-conversation, tools from four different sources, domain skills pulled from Git and S3, persistent per-user memory, a filesystem that outlives the microVM, execution limits, traces, immutable versions behind named endpoints, and finally an escape hatch to plain Python.</p>
+
+  <h4>Three ways to drive the harness</h4>
+  <p>Every lab gives you the same operation in whichever interface you prefer. Pick one and stay with it, or switch freely &#x2014; they act on the same resources.</p>
+  <div class="tw"><table>
+    <thead><tr><th>Interface</th><th>Install</th><th>Best for</th></tr></thead>
+    <tbody>
+      <tr><td>AgentCore CLI</td><td><code>npm i -g @aws/agentcore</code></td><td>Fastest path. Scaffolds the IAM role and project for you.</td></tr>
+      <tr><td>AWS CLI</td><td><code>aws bedrock-agentcore-control</code></td><td>Seeing the raw API shape; scripting in CI.</td></tr>
+      <tr><td>boto3</td><td><code>pip install boto3</code></td><td>Calling the harness from your own application.</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="warn"><b>This lab creates billable resources</b>
+  <p>There is no separate charge for the harness itself &#x2014; you pay for the underlying capabilities it uses: model inference, Runtime microVM time, Memory, Browser, Code Interpreter, CloudWatch. Every lab is small, but idle microVMs stay warm for 15 minutes by default. <b style="display:inline;text-transform:none;letter-spacing:0;font-size:inherit;font-family:inherit">Run Lab 12 when you are done.</b></p></div>
+
+  <div class="note"><b>Region and availability</b>
+  <p>The harness is GA in the AgentCore regions. This lab standardises on <code>us-west-2</code>, with one exception: the Web Search connector in Lab 04 is <code>us-east-1</code> only, and that step is marked optional.</p></div>
+  </div>
+</section>
+
+<section id="lab01" data-nav="Setup &amp; IAM" data-n="01">
+  <div class="lab-head">
+    <div class="lab-n">01</div>
+    <div>
+      <h2>Set up the toolchain, execution role and model access</h2>
+      <p class="lab-sub">~25 min &#xB7; IAM &#xB7; model access &#xB7; shell environment</p>
+    </div>
+  </div>
+  <div class="col">
+  <div class="goal"><p><strong>Goal</strong>Establish shell variables used by every later lab, create the IAM execution role the harness assumes, and enable access to the model it will call. Everything the agent does at runtime &#x2014; calling Bedrock, pulling its container, writing traces &#x2014; happens under this role.</p></div>
+
+  <p class="step">Step 1 &#x2014; Shell environment</p>
+  <p>Open a terminal and export these. Every command in this lab assumes they are set.</p>
+  </div>
+  <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code>export AWS_REGION=us-west-2
+export AWS_DEFAULT_REGION=us-west-2
+export ACCOUNT_ID="$(aws sts get-caller-identity --query Account --output text)"
+export ROLE_NAME=AgentCoreHarnessLabRole
+export ROLE_ARN="arn:aws:iam::${ACCOUNT_ID}:role/${ROLE_NAME}"
+
+echo "Account $ACCOUNT_ID / Region $AWS_REGION"
+echo "$ROLE_ARN"</code></pre></div>
+
+  <div class="col">
+  <p class="step">Step 2 &#x2014; Install a client</p>
+  </div>
+  <div class="tabs">
+    <div class="tabstrip" role="tablist">
+      <button class="on" role="tab" aria-selected="true">AgentCore CLI</button>
+      <button role="tab" aria-selected="false">AWS CLI + boto3</button>
+    </div>
+    <div class="tabpanel on">
+      <div class="code"><div class="code-bar"><span class="code-lang">bash &#xB7; needs Node 20+</span></div><pre><code>npm install -g @aws/agentcore
+agentcore --version</code></pre></div>
+      <div class="col"><p>The CLI is the fastest path: it scaffolds a project, <em>creates the execution role for you</em>, and deploys via CloudFormation. If you use only the CLI you may skip Step 3 &#x2014; but read it anyway, because Lab 10 asks you to reason about these permissions.</p>
+      <p>On a rerun, skip this step. The package is installed globally and nothing in <a href="#rerun">Reset &amp; rerun</a> removes it &#x2014; <code>agentcore --version</code> will already answer.</p></div>
+    </div>
+    <div class="tabpanel">
+      <div class="code"><div class="code-bar"><span class="code-lang">bash &#xB7; needs Python 3.10+</span></div><pre><code>python -m pip install --upgrade boto3
+python -c "import boto3; print(boto3.__version__)"
+aws --version</code></pre></div>
+      <div class="col"><p>Your <em>caller</em> identity also needs harness permissions. Note the dual-permission model: each harness API requires both the harness action and the underlying Runtime action &#x2014; <code>InvokeHarness</code> needs <code>bedrock-agentcore:InvokeHarness</code> <em>and</em> <code>bedrock-agentcore:InvokeAgentRuntime</code>. Lab 10 has the full matrix.</p></div>
+    </div>
+  </div>
+
+  <div class="col">
+  <p class="step">Step 3 &#x2014; Create the execution role</p>
+  <p>The trust policy lets the AgentCore service principal assume the role.</p>
+  </div>
+  <div class="code"><div class="code-bar"><span class="code-lang">bash &#xB7; trust policy</span></div><pre><code>cat &gt; trust-policy.json &lt;&lt;'JSON'
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Principal": {"Service": "bedrock-agentcore.amazonaws.com"},
+    "Action": "sts:AssumeRole"
+  }]
+}
+JSON
+
+aws iam create-role \
+  --role-name "$ROLE_NAME" \
+  --assume-role-policy-document file://trust-policy.json</code></pre></div>
+
+  <div class="col"><p>Now the permission policy. This is the baseline every harness needs: model invocation, the public ECR pull for the harness application image, X-Ray traces, CloudWatch logs and metrics, workload identity, and the default Browser and Code Interpreter tools.</p></div>
+
+  <div class="code"><div class="code-bar"><span class="code-lang">bash &#xB7; execution policy</span></div><pre><code>cat &gt; harness-policy.json &lt;&lt;JSON
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    { "Sid": "BedrockModelInvocation", "Effect": "Allow",
+      "Action": ["bedrock:InvokeModel","bedrock:InvokeModelWithResponseStream"],
+      "Resource": ["arn:aws:bedrock:*::foundation-model/*",
+                   "arn:aws:bedrock:${AWS_REGION}:${ACCOUNT_ID}:*"] },
+    { "Sid": "EcrPublicTokenAccess", "Effect": "Allow",
+      "Action": ["ecr-public:GetAuthorizationToken"], "Resource": "*" },
+    { "Sid": "StsForEcrPublicPull", "Effect": "Allow",
+      "Action": ["sts:GetServiceBearerToken"], "Resource": "*" },
+    { "Sid": "XRayTracingAccess", "Effect": "Allow",
+      "Action": ["xray:PutTraceSegments","xray:PutTelemetryRecords",
+                 "xray:GetSamplingRules","xray:GetSamplingTargets"], "Resource": "*" },
+    { "Sid": "CloudWatchLogsGroup", "Effect": "Allow",
+      "Action": ["logs:CreateLogGroup","logs:DescribeLogStreams"],
+      "Resource": "arn:aws:logs:${AWS_REGION}:${ACCOUNT_ID}:log-group:/aws/bedrock-agentcore/runtimes/*" },
+    { "Sid": "CloudWatchLogsDescribeGroups", "Effect": "Allow",
+      "Action": ["logs:DescribeLogGroups"],
+      "Resource": "arn:aws:logs:${AWS_REGION}:${ACCOUNT_ID}:log-group:*" },
+    { "Sid": "CloudWatchLogsStream", "Effect": "Allow",
+      "Action": ["logs:CreateLogStream","logs:PutLogEvents"],
+      "Resource": "arn:aws:logs:${AWS_REGION}:${ACCOUNT_ID}:log-group:/aws/bedrock-agentcore/runtimes/*:log-stream:*" },
+    { "Sid": "CloudWatchMetricsPublish", "Effect": "Allow", "Resource": "*",
+      "Action": "cloudwatch:PutMetricData",
+      "Condition": {"StringEquals": {"cloudwatch:namespace": "bedrock-agentcore"}} },
+    { "Sid": "AgentCoreWorkloadIdentity", "Effect": "Allow",
+      "Action": ["bedrock-agentcore:GetWorkloadAccessToken",
+                 "bedrock-agentcore:GetWorkloadAccessTokenForJWT"],
+      "Resource": ["arn:aws:bedrock-agentcore:${AWS_REGION}:${ACCOUNT_ID}:workload-identity-directory/default",
+                   "arn:aws:bedrock-agentcore:${AWS_REGION}:${ACCOUNT_ID}:workload-identity-directory/default/workload-identity/harness_*"] },
+    { "Sid": "AgentCoreBrowserDefault", "Effect": "Allow",
+      "Action": ["bedrock-agentcore:StartBrowserSession","bedrock-agentcore:StopBrowserSession",
+                 "bedrock-agentcore:GetBrowserSession","bedrock-agentcore:ListBrowserSessions",
+                 "bedrock-agentcore:UpdateBrowserStream","bedrock-agentcore:ConnectBrowserAutomationStream",
+                 "bedrock-agentcore:ConnectBrowserLiveViewStream"],
+      "Resource": "arn:aws:bedrock-agentcore:${AWS_REGION}:aws:browser/*" },
+    { "Sid": "AgentCoreCodeInterpreterDefault", "Effect": "Allow",
+      "Action": ["bedrock-agentcore:StartCodeInterpreterSession","bedrock-agentcore:StopCodeInterpreterSession",
+                 "bedrock-agentcore:GetCodeInterpreterSession","bedrock-agentcore:ListCodeInterpreterSessions",
+                 "bedrock-agentcore:InvokeCodeInterpreter"],
+      "Resource": "arn:aws:bedrock-agentcore:${AWS_REGION}:aws:code-interpreter/*" }
+  ]
+}
+JSON
+
+aws iam put-role-policy \
+  --role-name "$ROLE_NAME" \
+  --policy-name HarnessBaseline \
+  --policy-document file://harness-policy.json</code></pre></div>
+
+  <div class="col">
+  <div class="note"><b>Note the wildcard</b>
+  <p><code>BedrockModelInvocation</code> as written allows every foundation model in every region. It is fine for a lab. In production, replace it with specific <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/inference-profiles.html">inference profile</a> ARNs paired with the foundation-model ARNs for each allowed region.</p></div>
+
+  <p>You will append optional statements to this role as the lab progresses &#x2014; Memory in Lab 06, private ECR in Lab 07, Gateway and API keys in Labs 03&#x2013;04. Keep <code>harness-policy.json</code> around.</p>
+
+  <p class="step">Step 4 &#x2014; Enable Transaction Search (once per account)</p>
+  <p>Traces do not appear in the AgentCore Observability dashboard until CloudWatch Transaction Search is enabled. Do it now so Lab 08 has data.</p>
+  </div>
+  <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code>aws xray update-trace-segment-destination --destination CloudWatchLogs
+aws xray update-indexing-rule \
+  --name "Default" \
+  --rule '{"Probabilistic": {"DesiredSamplingPercentage": 100}}'</code></pre></div>
+
+  <div class="col">
+  <p class="step">Step 5 &#x2014; Enable model access (once per account, per model)</p>
+  <p>IAM permission to call a model is not the same thing as <em>access</em> to it. Anthropic models on Bedrock are sold through AWS Marketplace, and your account must hold an <strong>agreement</strong> for each model before any principal &#x2014; including an account administrator &#x2014; can invoke it. A brand-new account holds none. Check first:</p>
+  </div>
+  <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code>export MODEL_ID=anthropic.claude-sonnet-4-6
+
+aws bedrock get-foundation-model-availability \
+  --region "$AWS_REGION" \
+  --model-id "$MODEL_ID"</code></pre></div>
+
+  <div class="col"><p>Read <code>agreementAvailability.status</code>. <code>AVAILABLE</code> means you are done &#x2014; skip to the checkpoint. <code>NOT_AVAILABLE</code> means no agreement exists yet, and every invocation will fail. Note that the other three fields can all look healthy while the agreement is missing:</p></div>
+
+  <div class="code"><div class="code-bar"><span class="code-lang">json &#xB7; an account that cannot invoke the model</span></div><pre><code>{
+  "modelId": "anthropic.claude-sonnet-4-6",
+  "agreementAvailability": { "status": "NOT_AVAILABLE" },
+  "authorizationStatus": "AUTHORIZED",
+  "entitlementAvailability": "AVAILABLE",
+  "regionAvailability": "AVAILABLE"
+}</code></pre></div>
+
+  <div class="col"><p>To create the agreement, fetch the current Marketplace offer token for the model and accept it. The offer token is generated per request and expires, so always pipe a fresh one into the second call rather than pasting a saved value.</p></div>
+
+  <div class="code"><div class="code-bar"><span class="code-lang">bash &#xB7; accept the Marketplace offer</span></div><pre><code>OFFER_TOKEN="$(aws bedrock list-foundation-model-agreement-offers \
+  --region "$AWS_REGION" \
+  --model-id "$MODEL_ID" \
+  --query 'offers[0].offerToken' --output text)"
+
+aws bedrock create-foundation-model-agreement \
+  --region "$AWS_REGION" \
+  --model-id "$MODEL_ID" \
+  --offer-token "$OFFER_TOKEN"</code></pre></div>
+
+  <div class="col"><p>Inspect the pricing before you accept if you like &#x2014; <code>list-foundation-model-agreement-offers</code> returns the full rate card under <code>offers[0].termDetails.usageBasedPricingTerm</code>. Accepting is usage-based with no upfront charge or commitment, and the agreement is reversible with <code>aws bedrock delete-foundation-model-agreement</code>.</p>
+
+  <p>The status now moves <code>NOT_AVAILABLE</code> &#x2192; <code>PENDING</code> &#x2192; <code>AVAILABLE</code>. Poll until it settles:</p>
+  </div>
+  <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code>while true; do
+  STATUS="$(aws bedrock get-foundation-model-availability \
+    --region "$AWS_REGION" --model-id "$MODEL_ID" \
+    --query 'agreementAvailability.status' --output text)"
+  echo "$STATUS"
+  [ "$STATUS" = "AVAILABLE" ] &amp;&amp; break
+  sleep 15
+done</code></pre></div>
+
+  <div class="col">
+  <div class="warn"><b>Two delays, not one</b>
+  <p>Reaching <code>AVAILABLE</code> takes roughly a minute, and invocations keep failing for <em>another</em> minute or two after that while the entitlement propagates to the runtime. If your first call still fails, wait five minutes and retry before changing anything &#x2014; the most common way to lose an hour here is to start "fixing" IAM during that window.</p></div>
+  </div>
+
+  <div class="col"><p>Confirm with a real invocation. Note the model is invoked through an <strong>inference profile</strong> &#x2014; the bare model id is rejected with <code>Invocation of model ID &#x2026; with on-demand throughput isn't supported</code>, because these models are only reachable via a profile that fans out across regions. <code>global.</code> routes worldwide; <code>us.</code> stays inside the US regions.</p></div>
+
+  <div class="code"><div class="code-bar"><span class="code-lang">bash &#xB7; smoke test</span></div><pre><code>aws bedrock-runtime converse \
+  --region "$AWS_REGION" \
+  --model-id "global.${MODEL_ID}" \
+  --messages '[{"role":"user","content":[{"text":"say hi"}]}]' \
+  --inference-config '{"maxTokens":20}'</code></pre></div>
+
+  <div class="col">
+  <div class="note"><b>Why the error message misleads</b>
+  <p>A missing agreement surfaces as <code>AccessDeniedException: Model access is denied due to IAM user or service role is not authorized to perform the required AWS Marketplace actions (aws-marketplace:ViewSubscriptions, aws-marketplace:Subscribe)</code>. That reads like an IAM problem, and the usual reflex is to start granting marketplace permissions to the execution role. It is almost always the wrong fix: Bedrock tries to auto-subscribe on your behalf, and reports the failure of that fallback rather than the missing agreement itself. You will see the identical error from a principal holding <code>AdministratorAccess</code>.</p>
+  <p>Confirm which it is before touching any policy &#x2014; <code>aws iam simulate-principal-policy --policy-source-arn &lt;arn&gt; --action-names aws-marketplace:Subscribe bedrock:InvokeModel</code> tells you whether IAM is genuinely denying you. If it returns <code>allowed</code>, the problem is the agreement.</p>
+  <p>Once the agreement exists, no principal needs marketplace permissions at all &#x2014; the subscribe path is never taken. The execution role you built in Step 3 has none, and that is correct.</p></div>
+
+  <p>The agreement is account-level and applies across regions, so you create it once even if you later move the harness between US regions or switch the profile prefix from <code>global.</code> to <code>us.</code>.</p>
+  </div>
+
+  <div class="ck"><input type="checkbox" id="ck01"><div class="ck-body">
+    <p class="ck-t">Checkpoint 01</p>
+    <p><code>aws iam get-role --role-name $ROLE_NAME</code> returns a role whose trust policy names <code>bedrock-agentcore.amazonaws.com</code>, and <code>$ACCOUNT_ID</code> / <code>$ROLE_ARN</code> are set in your shell. <code>aws bedrock get-foundation-model-availability --model-id $MODEL_ID</code> reports <code>agreementAvailability.status: AVAILABLE</code>, and the <code>converse</code> smoke test returns text from the model.</p>
+  </div></div>
+</section>
+
+<section id="lab02" data-nav="First harness" data-n="02">
+  <div class="lab-head">
+    <div class="lab-n">02</div>
+    <div>
+      <h2>Create and invoke your first harness</h2>
+      <p class="lab-sub">~25 min &#xB7; CreateHarness &#xB7; InvokeHarness &#xB7; streaming</p>
+    </div>
+  </div>
+  <div class="col">
+  <div class="goal"><p><strong>Goal</strong>Stand up a harness with nothing but a name and a role, invoke it, and read the event stream. You will see that a harness with zero configuration is already a working agent &#x2014; model, memory, shell, filesystem and observability are defaults, not decisions you have to make.</p></div>
+
+  <p class="step">Step 1 &#x2014; Create</p>
+  </div>
+
+  <div class="tabs">
+    <div class="tabstrip" role="tablist">
+      <button class="on" role="tab" aria-selected="true">AgentCore CLI</button>
+      <button role="tab" aria-selected="false">AWS CLI</button>
+    </div>
+    <div class="tabpanel on">
+      <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code># Scaffold a project. Creates the IAM role, harness and memory for you.
+agentcore create --name researchagent --model-provider bedrock
+
+# Deploy the CloudFormation stack
+agentcore deploy
+
+# Confirm
+agentcore status</code></pre></div>
+      <div class="col"><p>Run <code>agentcore create</code> with no flags instead to get the interactive wizard, which walks you through project name, project type (choose <b style="display:inline;text-transform:none;letter-spacing:0;font-size:inherit;font-family:inherit">Harness</b>), model provider, environment, memory, and advanced settings. The wizard writes the same <code>app/researchagent/harness.json</code> that the flags produce.</p></div>
+    </div>
+    <div class="tabpanel">
+      <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code>aws bedrock-agentcore-control create-harness \
+  --harness-name "ResearchAgent" \
+  --execution-role-arn "$ROLE_ARN"
+
+# Capture the generated id &#x2014; it has a random suffix
+export HARNESS_ID="$(aws bedrock-agentcore-control list-harnesses \
+  --query "harnesses[?harnessName=='ResearchAgent'].harnessId | [0]" --output text)"
+
+# Poll until READY
+aws bedrock-agentcore-control get-harness --harness-id "$HARNESS_ID" \
+  --query '{status:status, arn:harnessArn}'
+
+export HARNESS_ARN="$(aws bedrock-agentcore-control get-harness \
+  --harness-id "$HARNESS_ID" --query harnessArn --output text)"
+echo "$HARNESS_ARN"</code></pre></div>
+    </div>
+  </div>
+
+  <div class="col">
+  <p class="step">Step 2 &#x2014; Invoke</p>
+  <p>A harness invocation needs a <code>runtimeSessionId</code>. Reuse it and the conversation continues in the same microVM, with the same filesystem and the same memory.</p>
+  <div class="warn"><b>Session ID must be at least 33 characters</b>
+  <p>A UUID is 36 and works. A short string like <code>test-1</code> is rejected.</p></div>
+  </div>
+
+  <div class="tabs">
+    <div class="tabstrip" role="tablist">
+      <button class="on" role="tab" aria-selected="true">AgentCore CLI</button>
+      <button role="tab" aria-selected="false">boto3</button>
+    </div>
+    <div class="tabpanel on">
+      <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code>export SESSION_ID="$(uuidgen)"
+
+agentcore invoke --harness researchagent \
+  --session-id "$SESSION_ID" \
+  "Research three tropical vacation options under \$3k, within five hours of NYC."
+
+# Same session &#x2014; the agent still remembers the three options
+agentcore invoke --harness researchagent \
+  --session-id "$SESSION_ID" \
+  "Which of those has the shortest flight?"</code></pre></div>
+      <div class="col"><p>Add <code>--verbose</code> to print the raw streaming JSON events &#x2014; useful when you want to see tool calls and reasoning blocks rather than just the final text.</p></div>
+    </div>
+    <div class="tabpanel">
+      <div class="code"><div class="code-bar"><span class="code-lang">python &#xB7; invoke.py</span></div><pre><code>import os, sys, uuid, boto3
+
+REGION      = os.environ.get("AWS_REGION", "us-west-2")
+HARNESS_ARN = os.environ["HARNESS_ARN"]
+SESSION_ID  = os.environ.get("SESSION_ID") or str(uuid.uuid4())
+
+client = boto3.client("bedrock-agentcore", region_name=REGION)
+
+def ask(prompt, **overrides):
+    response = client.invoke_harness(
+        harnessArn=HARNESS_ARN,
+        runtimeSessionId=SESSION_ID,
+        messages=[{"role": "user", "content": [{"text": prompt}]}],
+        **overrides,
+    )
+    for event in response["stream"]:
+        if "contentBlockDelta" in event:
+            delta = event["contentBlockDelta"].get("delta", {})
+            if "text" in delta:
+                print(delta["text"], end="", flush=True)
+        elif "contentBlockStart" in event:
+            start = event["contentBlockStart"].get("start", {})
+            if "toolUse" in start:
+                print(f"\n  [tool: {start['toolUse']['name']}]", flush=True)
+        elif "messageStop" in event:
+            print(f"\n--- stopReason: {event['messageStop'].get('stopReason')}")
+        elif "metadata" in event:
+            print(f"--- usage: {event['metadata'].get('usage')}")
+        elif "runtimeClientError" in event:
+            print(f"\nError: {event['runtimeClientError']['message']}", file=sys.stderr)
+
+if __name__ == "__main__":
+    ask(" ".join(sys.argv[1:]) or "Research three tropical vacation options under $3k.")</code></pre></div>
+      <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code>export SESSION_ID="$(uuidgen)"
+python invoke.py "Research three tropical vacation options under \$3k."
+python invoke.py "Which of those has the shortest flight?"   # same session</code></pre></div>
+    </div>
+  </div>
+
+  <div class="col">
+  <p class="step">Step 3 &#x2014; Read the stream</p>
+  <p><code>InvokeHarness</code> returns events, not a blob. Learn these now; you will match against them in Labs 04 and 08.</p>
+  </div>
+  <div class="tw"><table>
+    <thead><tr><th>Event</th><th>Carries</th></tr></thead>
+    <tbody>
+      <tr><td><code>messageStart</code></td><td>Beginning of a message, including <code>role</code>.</td></tr>
+      <tr><td><code>contentBlockStart</code></td><td>Start of a text, <code>toolUse</code> or <code>toolResult</code> block. Tool name and <code>toolUseId</code> arrive here.</td></tr>
+      <tr><td><code>contentBlockDelta</code></td><td>Incremental <code>text</code>, <code>toolUse</code> input fragments, or <code>reasoningContent</code>.</td></tr>
+      <tr><td><code>contentBlockStop</code></td><td>End of a content block.</td></tr>
+      <tr><td><code>messageStop</code></td><td>End of the message, including <code>stopReason</code>.</td></tr>
+      <tr><td><code>metadata</code></td><td>Token usage and latency metrics.</td></tr>
+      <tr><td><code>runtimeClientError</code></td><td>An execution error.</td></tr>
+    </tbody>
+  </table></div>
+  <div class="col"><p>The <code>stopReason</code> tells you why the loop ended &#x2014; and three of the seven values are limits you will set yourself in Lab 08.</p></div>
+  <div class="tw"><table>
+    <thead><tr><th>stopReason</th><th>Meaning</th></tr></thead>
+    <tbody>
+      <tr><td><code>end_turn</code></td><td>Finished normally.</td></tr>
+      <tr><td><code>tool_use</code></td><td>Waiting on a client-side inline function result (Lab 04).</td></tr>
+      <tr><td><code>max_tokens</code></td><td>The model's per-turn token limit was reached.</td></tr>
+      <tr><td><code>max_iterations_exceeded</code></td><td>Hit <code>maxIterations</code>.</td></tr>
+      <tr><td><code>timeout_exceeded</code></td><td>Hit <code>timeoutSeconds</code>.</td></tr>
+      <tr><td><code>max_output_tokens_exceeded</code></td><td>Exhausted the <code>maxTokens</code> budget.</td></tr>
+      <tr><td><code>guardrail_intervened</code></td><td>A Bedrock Guardrail blocked the exchange (Lab 03).</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="col">
+  <p class="step">Step 4 &#x2014; Optional: local dev loop</p>
+  <p>If you are on the AgentCore CLI, <code>agentcore dev</code> deploys your resources to AWS, then starts a local server and opens a browser inspector where you can chat with the harness, watch traces, and override configuration per session without redeploying.</p>
+  </div>
+  <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code>agentcore dev                 # browser inspector
+agentcore dev --no-browser    # terminal TUI instead
+agentcore dev --logs          # non-interactive, logs to stdout</code></pre></div>
+
+  <div class="ck"><input type="checkbox" id="ck02"><div class="ck-body">
+    <p class="ck-t">Checkpoint 02</p>
+    <p>The agent answered both prompts, and the second answer referred back to the first without you resending the history. That continuity is AgentCore Memory working by default &#x2014; Lab 06 explains it.</p>
+  </div></div>
+</section>
+
+<section id="lab03" data-nav="Models" data-n="03">
+  <div class="lab-head">
+    <div class="lab-n">03</div>
+    <div>
+      <h2>Models and instructions</h2>
+      <p class="lab-sub">~30 min &#xB7; defaults vs overrides &#xB7; provider switching &#xB7; guardrails</p>
+    </div>
+  </div>
+  <div class="col">
+  <div class="goal"><p><strong>Goal</strong>Internalise the central pattern of the harness: <em>defaults at creation time, overrides at invocation time</em>. You will set a system prompt and model as harness defaults, override both for a single call without changing the resource, then switch model providers mid-conversation and watch the context survive.</p></div>
+
+  <p class="step">Step 1 &#x2014; Set defaults</p>
+  <p>If you never specify a model, the harness uses Claude Sonnet 4.6 on Bedrock (<code>global.anthropic.claude-sonnet-4-6</code>). Make that explicit and add instructions.</p>
+
+  <div class="warn"><b>Every model needs its own agreement</b>
+  <p>Marketplace agreements are per model, not per account. The moment you point a harness at a model you have not used before &#x2014; here, or in the per-call override in Step 2 &#x2014; repeat Lab 01 Step 5 for that model id first, or the invocation fails with the misleading <code>aws-marketplace:ViewSubscriptions</code> error. Switching between inference profiles of the <em>same</em> model (<code>global.</code> &#x2194; <code>us.</code>) needs nothing new.</p></div>
+  </div>
+
+  <div class="tabs">
+    <div class="tabstrip" role="tablist">
+      <button class="on" role="tab" aria-selected="true">AgentCore CLI</button>
+      <button role="tab" aria-selected="false">AWS CLI</button>
+    </div>
+    <div class="tabpanel on">
+      <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code>agentcore add harness \
+  --name research-agent \
+  --model-id us.anthropic.claude-sonnet-4-6-20250514-v1:0 \
+  --system-prompt "You are a research assistant. Cite sources." \
+  --tools agentcore-browser
+
+agentcore deploy</code></pre></div>
+      <div class="col"><p>To change defaults permanently later, edit <code>app/research-agent/harness.json</code> and run <code>agentcore deploy</code> again.</p></div>
+    </div>
+    <div class="tabpanel">
+      <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code>aws bedrock-agentcore-control create-harness \
+  --harness-name "research-agent" \
+  --execution-role-arn "$ROLE_ARN" \
+  --system-prompt '[{"text": "You are a research assistant. Cite sources."}]' \
+  --tools '[{"type": "agentcore_browser", "name": "browser"}]'</code></pre></div>
+      <div class="col"><p>To change defaults permanently later, call <code>update-harness</code> &#x2014; which mints a new immutable version (Lab 09).</p></div>
+    </div>
+  </div>
+
+  <div class="col">
+  <p class="step">Step 2 &#x2014; Override for one call</p>
+  <p>The same fields you set as defaults can be passed per invocation. The harness resource is untouched; only this call sees the overrides. This is how you A/B a model or prompt in seconds instead of a redeploy.</p>
+  </div>
+
+  <div class="tabs">
+    <div class="tabstrip" role="tablist">
+      <button class="on" role="tab" aria-selected="true">boto3</button>
+      <button role="tab" aria-selected="false">AgentCore CLI</button>
+    </div>
+    <div class="tabpanel on">
+      <div class="code"><div class="code-bar"><span class="code-lang">python</span></div><pre><code>response = client.invoke_harness(
+    harnessArn=HARNESS_ARN,
+    runtimeSessionId=SESSION_ID,
+    # These apply only to this call; the harness defaults stay intact
+    model={"bedrockModelConfig": {"modelId": "us.anthropic.claude-opus-4-5-20251101-v1:0"}},
+    systemPrompt=[{"text": "You are a terse research assistant. One paragraph answers only."}],
+    tools=[
+        {"type": "agentcore_browser", "name": "browser"},
+        {"type": "agentcore_code_interpreter", "name": "code_interpreter"},
+    ],
+    messages=[{"role": "user", "content": [{"text": "Summarize this paper as a bullet list."}]}],
+)</code></pre></div>
+    </div>
+    <div class="tabpanel">
+      <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code># Switch the model for one call
+agentcore invoke --harness research-agent \
+  --model-id us.anthropic.claude-opus-4-5-20251101-v1:0 \
+  "Summarize this research paper"
+
+# Swap tools for one call
+agentcore invoke --harness research-agent \
+  --tools agentcore-browser,code-interpreter \
+  "Plot the citation counts as a bar chart"</code></pre></div>
+    </div>
+  </div>
+
+  <div class="col">
+  <h4>What can be overridden at invoke time</h4>
+  <p>On the CLI: <code>--model-id</code>, <code>--tools</code>, <code>--system-prompt</code>, <code>--max-iterations</code>, <code>--max-tokens</code>, <code>--harness-timeout</code>, <code>--skills</code>, <code>--allowed-tools</code>, <code>--actor-id</code>. Add <code>--verbose</code> to see raw stream events.</p>
+
+  <p class="step">Step 3 &#x2014; Choose the API format</p>
+  <p>Whenever your agent calls a model, two things have to be settled: the <b style="display:inline;font-family:var(--mono);font-size:13px;letter-spacing:0;text-transform:none">protocol</b> (what shape the request and response JSON take) and the <b style="display:inline;font-family:var(--mono);font-size:13px;letter-spacing:0;text-transform:none">endpoint</b> (which AWS service the traffic actually reaches).</p>
+  <p>You would expect a field called <code>apiFormat</code> to control only the first. On <code>bedrockModelConfig</code> it controls both &#x2014; and that is the part worth remembering, because changing it moves your request to a different service.</p>
+  </div>
+  <div class="tw"><table>
+    <thead><tr><th>apiFormat</th><th>Protocol</th><th>Endpoint it routes to</th></tr></thead>
+    <tbody>
+      <tr><td><code>converse_stream</code> <em>(default)</em></td><td>Bedrock Converse API</td><td><code>bedrock-runtime</code></td></tr>
+      <tr><td><code>responses</code></td><td>OpenAI-compatible Responses API</td><td><code>bedrock-mantle</code></td></tr>
+      <tr><td><code>chat_completions</code></td><td>OpenAI-compatible Chat Completions</td><td><code>bedrock-mantle</code></td></tr>
+    </tbody>
+  </table></div>
+  <div class="col">
+  <p><code>bedrock-mantle</code> is the OpenAI-compatible surface in Bedrock, and it supports a <em>different set of models and capabilities</em> than <code>bedrock-runtime</code>. So switching this field is not cosmetic. Three consequences you would otherwise meet as puzzling errors:</p>
+  <ul>
+    <li><b style="display:inline;font-family:var(--mono);font-size:13px;letter-spacing:0;text-transform:none">A model on one endpoint may not exist on the other.</b> Set <code>apiFormat: "responses"</code> with a model served only by <code>bedrock-runtime</code> and the call fails &#x2014; you moved it to Mantle, where that model isn't offered.</li>
+    <li><b style="display:inline;font-family:var(--mono);font-size:13px;letter-spacing:0;text-transform:none">Guardrails require <code>converse_stream</code>.</b> Not an arbitrary rule: <code>guardrailConfig</code> is a Converse API feature served by <code>bedrock-runtime</code>, so any other format routes you away from the endpoint that implements it. See Step 7.</li>
+    <li><b style="display:inline;font-family:var(--mono);font-size:13px;letter-spacing:0;text-transform:none"><code>additionalParams</code> are protocol-shaped.</b> The Step 5 example passes <code>{"reasoning": {"effort": "high"}}</code>, an OpenAI Responses-shaped parameter &#x2014; which is exactly why it is paired with <code>apiFormat: "responses"</code>.</li>
+  </ul>
+  <p>On <code>openAiModelConfig</code> the field behaves ordinarily: it picks the protocol only &#x2014; <code>responses</code> (default) or <code>chat_completions</code> &#x2014; while the endpoint is a separate field of its own. That asymmetry is the whole thing to carry away: Bedrock bundles protocol and endpoint into one field, OpenAI splits them into two.</p>
+  </div>
+  <div class="code"><div class="code-bar"><span class="code-lang">python &#xB7; OpenAI: the two choices are independent</span></div><pre><code>"openAiModelConfig": {
+    "modelId": "gpt-5.4",
+    "apiFormat": "responses",          # protocol only
+    "endpoint": {"bedrockMantle": {}}  # endpoint chosen separately
+}</code></pre></div>
+  <div class="col"><p><code>apiFormat</code> does not apply to <code>gemini</code> or <code>lite_llm</code> at all.</p></div>
+
+  <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code># Bedrock model through the OpenAI-compatible Responses API
+agentcore add harness --name research-agent \
+  --model-provider bedrock \
+  --model-id us.anthropic.claude-sonnet-4-5-20250514-v1:0 \
+  --api-format responses
+agentcore deploy</code></pre></div>
+
+  <div class="col">
+  <p class="step">Step 4 &#x2014; Store a third-party API key</p>
+  <p>Keys live in the AgentCore Identity token vault as an API key credential provider. The harness pulls the key at invocation time; your code never handles the raw secret.</p>
+  </div>
+
+  <div class="tabs">
+    <div class="tabstrip" role="tablist">
+      <button class="on" role="tab" aria-selected="true">AWS CLI</button>
+      <button role="tab" aria-selected="false">AgentCore CLI</button>
+    </div>
+    <div class="tabpanel on">
+      <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code>aws bedrock-agentcore-control create-api-key-credential-provider \
+  --name my-openai-key \
+  --api-key "$OPENAI_API_KEY"
+
+export KEY_ARN="arn:aws:bedrock-agentcore:${AWS_REGION}:${ACCOUNT_ID}:token-vault/default/apikeycredentialprovider/my-openai-key"</code></pre></div>
+    </div>
+    <div class="tabpanel">
+      <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code>agentcore add credential --type api-key --name my-openai-key --api-key $OPENAI_API_KEY
+agentcore deploy</code></pre></div>
+    </div>
+  </div>
+
+  <div class="col">
+  <p>Then grant the execution role permission to read it. Append to <code>harness-policy.json</code> and re-run <code>put-role-policy</code>:</p>
+  </div>
+  <div class="code"><div class="code-bar"><span class="code-lang">json &#xB7; append to the policy Statement array</span></div><pre><code>{
+  "Sid": "AgentCoreApiKeyTokenVaultDefault",
+  "Effect": "Allow",
+  "Action": "bedrock-agentcore:GetResourceApiKey",
+  "Resource": [
+    "arn:aws:bedrock-agentcore:&lt;region&gt;:&lt;accountId&gt;:token-vault/default",
+    "arn:aws:bedrock-agentcore:&lt;region&gt;:&lt;accountId&gt;:workload-identity-directory/default",
+    "arn:aws:bedrock-agentcore:&lt;region&gt;:&lt;accountId&gt;:workload-identity-directory/default/workload-identity/harness_&lt;agentName&gt;-*"
+  ]
+},
+{
+  "Sid": "AgentCoreApiKeyTokenVaultPerKey",
+  "Effect": "Allow",
+  "Action": "bedrock-agentcore:GetResourceApiKey",
+  "Resource": "arn:aws:bedrock-agentcore:&lt;region&gt;:&lt;accountId&gt;:token-vault/default/apikeycredentialprovider/&lt;apiKeyName&gt;"
+},
+{
+  "Sid": "AgentCoreApiKeySecret",
+  "Effect": "Allow",
+  "Action": "secretsmanager:GetSecretValue",
+  "Resource": "arn:aws:secretsmanager:&lt;region&gt;:&lt;accountId&gt;:secret:bedrock-agentcore-identity!default/apikey/&lt;apiKeyName&gt;-*"
+}</code></pre></div>
+  <div class="col"><div class="tip"><b>Why the trailing dash-star</b><p>Secrets Manager appends a random suffix to secret ARNs, so the resource pattern must end in <code>-*</code>.</p></div></div>
+
+  <div class="col">
+  <p class="step">Step 5 &#x2014; Switch providers mid-session</p>
+  <p>This is the exercise that makes the harness click. Three turns, three different model configurations, <em>one</em> session ID. Context carries across all three.</p>
+  </div>
+
+  <div class="tabs">
+    <div class="tabstrip" role="tablist">
+      <button class="on" role="tab" aria-selected="true">boto3</button>
+      <button role="tab" aria-selected="false">AgentCore CLI</button>
+    </div>
+    <div class="tabpanel on">
+      <div class="code"><div class="code-bar"><span class="code-lang">python</span></div><pre><code># Turn 1: Bedrock (native Converse API)
+response = client.invoke_harness(
+    harnessArn=HARNESS_ARN,
+    runtimeSessionId=SESSION_ID,
+    model={"bedrockModelConfig": {"modelId": "us.anthropic.claude-sonnet-4-5-20250514-v1:0"}},
+    messages=[{"role": "user", "content": [{"text": "Analyze this codebase."}]}],
+)
+
+# Turn 2: Bedrock Mantle (OpenAI Responses format, no API key needed)
+response = client.invoke_harness(
+    harnessArn=HARNESS_ARN,
+    runtimeSessionId=SESSION_ID,
+    model={
+        "bedrockModelConfig": {
+            "modelId": "openai.gpt-4o",
+            "apiFormat": "responses",
+            "additionalParams": {"reasoning": {"effort": "high"}},
+        }
+    },
+    messages=[{"role": "user", "content": [{"text": "Now suggest fixes for the top three issues."}]}],
+)
+
+# Turn 3: OpenAI model via Bedrock Mantle (still no API key)
+response = client.invoke_harness(
+    harnessArn=HARNESS_ARN,
+    runtimeSessionId=SESSION_ID,
+    model={
+        "openAiModelConfig": {
+            "modelId": "gpt-5.4",
+            "apiFormat": "responses",
+            "endpoint": {"bedrockMantle": {}},
+        }
+    },
+    messages=[{"role": "user", "content": [{"text": "Summarize the fixes as a bullet list."}]}],
+)</code></pre></div>
+      <div class="col"><p><code>openAiModelConfig</code> with <code>"endpoint": {"bedrockMantle": {}}</code> reaches OpenAI models through Bedrock using your execution role &#x2014; no API key. Use <code>apiKeyArn</code> instead to call OpenAI's own endpoint directly.</p></div>
+    </div>
+    <div class="tabpanel">
+      <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code>SESSION_ID="$(uuidgen)"
+
+# Turn 1: Bedrock Mantle, Responses format
+agentcore invoke --harness my-agent \
+  --model-id us.anthropic.claude-sonnet-4-5-20250514-v1:0 \
+  --api-format responses \
+  --session-id "$SESSION_ID" \
+  "Analyze this codebase and identify performance bottlenecks."
+
+# Turn 2: OpenAI direct, same session
+agentcore invoke --harness my-agent \
+  --model-provider open_ai \
+  --model-id gpt-5.4 \
+  --api-key-arn "$KEY_ARN" \
+  --session-id "$SESSION_ID" \
+  "Now suggest fixes for the top three issues."</code></pre></div>
+    </div>
+  </div>
+
+  <div class="col">
+  <p class="step">Step 6 &#x2014; Reach any provider through LiteLLM</p>
+  <p><code>liteLlmModelConfig</code> covers everything LiteLLM supports, including OpenAI-compatible gateways. Set <code>modelId</code> to a provider-prefixed ID such as <code>gemini/gemini-2.5-pro</code> or <code>anthropic/claude-sonnet-4-6</code>.</p>
+  </div>
+  <div class="tw"><table>
+    <thead><tr><th>Field</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td><code>modelId</code> <em>(required)</em></td><td>LiteLLM provider-prefixed model ID.</td></tr>
+      <tr><td><code>apiKeyArn</code></td><td>Token-vault credential provider ARN. Required for key-authenticated providers; <em>not</em> needed for the <code>bedrock/</code> prefix, which uses the execution role.</td></tr>
+      <tr><td><code>apiBase</code></td><td>Custom endpoint URL for a proxy or self-hosted OpenAI-compatible gateway.</td></tr>
+      <tr><td><code>additionalParams</code></td><td>Passed through to LiteLLM unchanged. Read the warning below.</td></tr>
+      <tr><td><code>maxTokens</code>, <code>temperature</code>, <code>topP</code></td><td>Optional sampling controls.</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code>agentcore add harness --name proxy-agent \
+  --model-provider lite_llm \
+  --model-id openai/gpt-5.4 \
+  --api-base https://my-llm-gateway.example.com/v1 \
+  --api-key-arn "$KEY_ARN" \
+  --additional-params '{"timeout": 30}'
+agentcore deploy</code></pre></div>
+
+  <div class="col"><div class="warn"><b><code>additionalParams</code> is a trust boundary</b>
+  <p>These parameters reach the provider unvalidated. A caller who controls them can redirect requests to another endpoint (<code>aws_bedrock_runtime_endpoint</code>), override the <code>Authorization</code> header (<code>extra_headers</code>), attempt an IAM role switch (<code>aws_role_name</code>), or change the target model and region entirely. If your application forwards caller-supplied model config to <code>InvokeHarness</code>, strip or allowlist it first. Lab 10 covers the mitigations.</p></div></div>
+
+  <div class="col">
+  <p class="step">Step 7 &#x2014; Apply a Bedrock Guardrail</p>
+  <p>Guardrails attach through <code>bedrockModelConfig.additionalParams</code> and require the <code>converse_stream</code> format &#x2014; the default. Create a guardrail in the console or CLI first, then:</p>
+  </div>
+  <div class="code"><div class="code-bar"><span class="code-lang">python</span></div><pre><code>import boto3
+
+client = boto3.client("bedrock-agentcore")
+response = client.invoke_harness(
+    harnessArn=HARNESS_ARN,
+    runtimeSessionId=SESSION_ID,
+    model={
+        "bedrockModelConfig": {
+            "modelId": "us.amazon.nova-micro-v1:0",
+            "apiFormat": "converse_stream",
+            "additionalParams": {
+                "guardrailConfig": {
+                    "guardrailIdentifier": "arn:aws:bedrock:us-west-2:111122223333:guardrail/abc123def456",
+                    "guardrailVersion": "1",
+                    "trace": "enabled_full",
+                }
+            },
+        }
+    },
+    messages=[{"role": "user", "content": [{"text": "Help me plan a trip."}]}],
+)</code></pre></div>
+  <div class="code"><div class="code-bar"><span class="code-lang">json &#xB7; execution role addition</span></div><pre><code>{
+  "Effect": "Allow",
+  "Action": "bedrock:ApplyGuardrail",
+  "Resource": "arn:aws:bedrock:us-west-2:111122223333:guardrail/abc123def456"
+}</code></pre></div>
+  <div class="col"><p>Use a guardrail in the same region as the model request. When it intervenes, the stream reports <code>guardrail_intervened</code> as the stop reason &#x2014; try a denied topic and confirm you see it.</p></div>
+
+  <div class="ck"><input type="checkbox" id="ck03"><div class="ck-body">
+    <p class="ck-t">Checkpoint 03</p>
+    <p>You ran two consecutive turns on one session ID with different <code>model</code> configurations, and the second turn referred correctly to the first turn's content. You can also state the difference between a default and an override without looking it up.</p>
+  </div></div>
+</section>
+
+<section id="lab04" data-nav="Tools" data-n="04">
+  <div class="lab-head">
+    <div class="lab-n">04</div>
+    <div>
+      <h2>Tools</h2>
+      <p class="lab-sub">~40 min &#xB7; MCP &#xB7; Gateway &#xB7; Browser &#xB7; Code Interpreter &#xB7; inline functions</p>
+    </div>
+  </div>
+  <div class="col">
+  <div class="goal"><p><strong>Goal</strong>Attach all five tool types, then restrict them. Tools in the harness are declarative &#x2014; you list what the agent may call and AgentCore handles invocation, credentials and results. Four of the five run on the harness microVM; the fifth runs in your own process.</p></div>
+
+  <h4>The five types, plus two built-ins</h4>
+  </div>
+  <div class="tw"><table>
+    <thead><tr><th>Type</th><th>What it is</th><th>Runs on</th></tr></thead>
+    <tbody>
+      <tr><td><code>remote_mcp</code></td><td>Any remote Model Context Protocol endpoint, by URL. No Gateway needed.</td><td>Harness VM</td></tr>
+      <tr><td><code>agentcore_gateway</code></td><td>Governed connectivity with inbound/outbound auth, access control and Cedar policy. Every tool on the gateway becomes available.</td><td>Harness VM</td></tr>
+      <tr><td><code>agentcore_browser</code></td><td>Managed web browsing and automation.</td><td>Harness VM</td></tr>
+      <tr><td><code>agentcore_code_interpreter</code></td><td>Sandboxed Python / JavaScript / TypeScript execution.</td><td>Harness VM</td></tr>
+      <tr><td><code>inline_function</code></td><td>A tool <em>schema</em> only. The harness pauses and hands the call back to your code.</td><td>Your client</td></tr>
+    </tbody>
+  </table></div>
+  <div class="col"><p>Two built-ins are present in every session unless you restrict them: <code>shell</code> executes bash commands, and <code>file_operations</code> views, creates and edits files. They are why a bare harness can already write and run code.</p></div>
+
+  <div class="col">
+  <p class="step">Step 1 &#x2014; Attach the sandboxed tools</p>
+  </div>
+  <div class="tabs">
+    <div class="tabstrip" role="tablist">
+      <button class="on" role="tab" aria-selected="true">AgentCore CLI</button>
+      <button role="tab" aria-selected="false">boto3</button>
+    </div>
+    <div class="tabpanel on">
+      <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code>agentcore add tool --harness research-agent \
+  --type agentcore_browser --name browser
+
+agentcore add tool --harness research-agent \
+  --type agentcore_code_interpreter --name code-interpreter
+
+agentcore deploy
+
+# Exercise both
+agentcore invoke --harness research-agent \
+  "Look up the 5 largest US national parks by area, then compute the mean and plot a bar chart."</code></pre></div>
+      <div class="col"><p>The <code>--type</code> flag uses underscore-separated names that match the type identifiers in <code>harness.json</code>.</p></div>
+    </div>
+    <div class="tabpanel">
+      <div class="code"><div class="code-bar"><span class="code-lang">python</span></div><pre><code>tools = [
+    {"type": "agentcore_browser", "name": "browser"},
+    {"type": "agentcore_code_interpreter", "name": "code_interpreter"},
+]
+
+response = client.invoke_harness(
+    harnessArn=HARNESS_ARN,
+    runtimeSessionId=SESSION_ID,
+    tools=tools,
+    messages=[{"role": "user", "content": [
+        {"text": "Look up the 5 largest US national parks, then plot them as a bar chart."}
+    ]}],
+)</code></pre></div>
+    </div>
+  </div>
+  <div class="col"><p>Watch the stream: you should see <code>contentBlockStart</code> events naming <code>browser</code> and <code>code_interpreter</code> before the final text. Both are already permitted by the baseline execution role from Lab 01.</p></div>
+
+  <div class="col">
+  <p class="step">Step 2 &#x2014; Connect a remote MCP server</p>
+  <p>Three authentication shapes, in increasing order of how much you should trust them in production.</p>
+  </div>
+  <div class="code"><div class="code-bar"><span class="code-lang">python</span></div><pre><code>tools = [
+    # a. Public MCP server, no auth
+    {
+        "type": "remote_mcp",
+        "name": "exa",
+        "config": {"remoteMcp": {"url": "https://mcp.exa.ai/mcp"}},
+    },
+    # b. Plain-text header &#x2014; fine for a lab, not for production
+    {
+        "type": "remote_mcp",
+        "name": "my-private-mcp",
+        "config": {"remoteMcp": {
+            "url": "https://mcp.example.com/api",
+            "headers": {"Authorization": "Bearer &lt;your-token&gt;"}
+        }},
+    },
+    # c. Key held in the AgentCore Identity token vault. The ${arn:...} reference
+    #    is resolved to the real key at invocation time.
+    {
+        "type": "remote_mcp",
+        "name": "exa-secure",
+        "config": {"remoteMcp": {
+            "url": "https://mcp.exa.ai/mcp",
+            "headers": {"x-api-key": "${arn:aws:bedrock-agentcore:us-west-2:123456789012:token-vault/default/apikeycredentialprovider/my-exa-key}"}
+        }},
+    },
+]</code></pre></div>
+  <div class="code"><div class="code-bar"><span class="code-lang">bash &#xB7; same three, on the CLI</span></div><pre><code>agentcore add tool --harness my-agent --type remote_mcp \
+  --name exa --url https://mcp.exa.ai/mcp
+
+agentcore add tool --harness my-agent --type remote_mcp \
+  --name exa-secure --url https://mcp.exa.ai/mcp \
+  --header 'x-api-key=${arn:aws:bedrock-agentcore:us-west-2:123456789012:token-vault/default/apikeycredentialprovider/my-exa-key}'
+
+agentcore deploy</code></pre></div>
+  <div class="col"><div class="note"><b>When to reach for Gateway instead</b>
+  <p>For managed credential rotation and OAuth-protected tools, put the MCP server behind AgentCore Gateway and use AgentCore Identity rather than raw headers.</p></div></div>
+
+  <div class="col">
+  <p class="step">Step 3 &#x2014; Attach a Gateway</p>
+  <p>A gateway is a governed tool surface: reference one ARN and every tool configured on it becomes available to the agent, with Cedar policies gating each call.</p>
+  </div>
+  <div class="code"><div class="code-bar"><span class="code-lang">python</span></div><pre><code># SigV4 (AWS IAM) outbound auth &#x2014; the default
+{
+    "type": "agentcore_gateway",
+    "name": "my-gateway",
+    "config": {"agentCoreGateway": {
+        "gatewayArn": "arn:aws:bedrock-agentcore:us-west-2:123456789012:gateway/my-gateway"
+    }},
+},
+# OAuth outbound auth
+{
+    "type": "agentcore_gateway",
+    "name": "my-oauth-gateway",
+    "config": {"agentCoreGateway": {
+        "gatewayArn": "arn:aws:bedrock-agentcore:us-west-2:123456789012:gateway/my-oauth-gateway",
+        "outboundAuth": {"oauth": {
+            "credentialProviderName": "my-oauth-provider",
+            "scopes": ["read", "write"]
+        }}
+    }},
+}</code></pre></div>
+  <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code># By ARN
+agentcore add tool --harness my-agent --type agentcore_gateway \
+  --name my-gateway \
+  --gateway-arn arn:aws:bedrock-agentcore:us-west-2:123456789012:gateway/my-gateway
+
+# Or by project-local name
+agentcore add tool --harness my-agent --type agentcore_gateway \
+  --name my-gateway --gateway my-gateway</code></pre></div>
+  <div class="col"><p>The execution role needs <code>bedrock-agentcore:InvokeGateway</code> on the gateway ARN:</p></div>
+  <div class="code"><div class="code-bar"><span class="code-lang">json &#xB7; execution role addition</span></div><pre><code>{
+  "Sid": "AgentCoreGatewayAccess",
+  "Effect": "Allow",
+  "Action": "bedrock-agentcore:InvokeGateway",
+  "Resource": "arn:aws:bedrock-agentcore:&lt;region&gt;:&lt;accountId&gt;:gateway/&lt;gatewayId&gt;"
+}</code></pre></div>
+
+  <div class="col">
+  <p class="step">Step 4 &#x2014; Optional: give the agent web search</p>
+  <div class="warn"><b>us-east-1 only</b>
+  <p>The Web Search Tool connector is available in US East (N. Virginia). Create both the gateway and the harness there, or skip this step.</p></div>
+  <p>Web search is not a harness tool type &#x2014; it is a Gateway <em>connector</em>. The path is: create a gateway with MCP protocol and <code>AWS_IAM</code> inbound auth, add a target with <code>connectorId: "web-search"</code>, then attach that gateway to your harness. The gateway exposes a standard MCP <code>WebSearch</code> tool the agent discovers like any other. Queries are served entirely within AWS.</p>
+  <ol>
+    <li>Create the Gateway and connector target. Its <em>Gateway service role</em> needs <code>bedrock-agentcore:InvokeWebSearch</code> on the connector. Wait for <code>READY</code> and note the ARN.</li>
+    <li>Grant the <em>harness execution role</em> &#x2014; a different role &#x2014; <code>bedrock-agentcore:InvokeGateway</code> on that gateway ARN.</li>
+    <li>Attach the gateway as an <code>agentcore_gateway</code> tool with default <code>AWS_IAM</code> outbound auth.</li>
+  </ol>
+  </div>
+  <div class="code"><div class="code-bar"><span class="code-lang">python</span></div><pre><code>tools = [
+    {
+        "type": "agentcore_gateway",
+        "name": "web-search",
+        "config": {"agentCoreGateway": {
+            "gatewayArn": "arn:aws:bedrock-agentcore:us-east-1:123456789012:gateway/my-web-search-gateway",
+            "outboundAuth": {"awsIam": {}}
+        }},
+    },
+]
+
+client.create_harness(
+    harnessName="research-agent",
+    executionRoleArn="arn:aws:iam::123456789012:role/MyHarnessRole",
+    tools=tools,
+)</code></pre></div>
+  <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code>agentcore add tool --harness research-agent --type agentcore_gateway \
+  --name web-search \
+  --gateway-arn arn:aws:bedrock-agentcore:us-east-1:123456789012:gateway/my-web-search-gateway
+
+agentcore deploy
+agentcore invoke --harness research-agent \
+  "Search the web for the latest AWS announcements and cite your sources."</code></pre></div>
+  <div class="col"><div class="tip"><b>Also grant Memory</b><p>If your harness uses managed memory &#x2014; the default &#x2014; the execution role needs the AgentCore Memory permissions too, because the agent reads and writes session memory on every invocation. Lab 06 adds them.</p></div></div>
+
+  <div class="col">
+  <p class="step">Step 5 &#x2014; Inline functions and human-in-the-loop</p>
+  <p>An inline function is a schema with no implementation on the AWS side. When the agent calls it, the stream stops with <code>stopReason: "tool_use"</code> and hands you the call. You decide what happens &#x2014; prompt a human, hit an internal API &#x2014; then send the result back.</p>
+  <p>This is a three-part exercise. First, declare the tool and invoke:</p>
+  </div>
+  <div class="code"><div class="code-bar"><span class="code-lang">python &#xB7; 1. invoke with an inline tool</span></div><pre><code>response = client.invoke_harness(
+    harnessArn=HARNESS_ARN,
+    runtimeSessionId=SESSION_ID,
+    tools=[{
+        "type": "inline_function",
+        "name": "get_weather",
+        "config": {"inlineFunction": {
+            "description": "Get the current weather for a city.",
+            "inputSchema": {
+                "type": "object",
+                "properties": {"city": {"type": "string"}},
+                "required": ["city"]
+            }
+        }}
+    }],
+    messages=[{"role": "user", "content": [{"text": "What's the weather in Seattle?"}]}],
+)</code></pre></div>
+  <div class="code"><div class="code-bar"><span class="code-lang">python &#xB7; 2. capture the call from the stream</span></div><pre><code>tool_use_id = None
+tool_name = None
+tool_input = None
+for event in response["stream"]:
+    if "contentBlockStart" in event:
+        start = event["contentBlockStart"].get("start", {})
+        if "toolUse" in start and start["toolUse"].get("name") == "get_weather":
+            tool_use_id = start["toolUse"]["toolUseId"]
+            tool_name = start["toolUse"]["name"]
+    if "contentBlockDelta" in event:
+        delta = event["contentBlockDelta"].get("delta", {})
+        if "toolUse" in delta:
+            tool_input = (tool_input or "") + delta["toolUse"].get("input", "")</code></pre></div>
+  <div class="code"><div class="code-bar"><span class="code-lang">python &#xB7; 3. execute it yourself and send the result back</span></div><pre><code>import json
+
+client.invoke_harness(
+    harnessArn=HARNESS_ARN,
+    runtimeSessionId=SESSION_ID,
+    messages=[
+        {
+            "role": "assistant",
+            "content": [{"toolUse": {"toolUseId": tool_use_id,
+                                     "name": tool_name,
+                                     "input": json.loads(tool_input)}}],
+        },
+        {
+            "role": "user",
+            "content": [{
+                "toolResult": {
+                    "toolUseId": tool_use_id,
+                    "content": [{"text": "72&#xB0;F, partly cloudy"}],
+                    "status": "success",
+                }
+            }],
+        },
+    ],
+)</code></pre></div>
+  <div class="col"><div class="note"><b>You must send both messages</b>
+  <p>The assistant <code>toolUse</code> message <em>and</em> your <code>toolResult</code>. The harness deliberately does not persist the inline-function turn: if the client never returned a result, a stored assistant <code>toolUse</code> with no matching <code>toolResult</code> would leave the session corrupted. Requiring both keeps the session clean whether or not you complete the call.</p></div>
+
+  <p>On the CLI, declare the tool then fill in its schema in <code>harness.json</code>:</p>
+  </div>
+  <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code>agentcore add tool --harness my-agent --type inline_function \
+  --name approve_purchase \
+  --description "Request human approval for a purchase" \
+  --input-schema '{"type":"object","properties":{"item":{"type":"string"},"amount":{"type":"number"}},"required":["item","amount"]}'
+agentcore deploy
+
+agentcore invoke --harness my-agent \
+  "Find a mechanical keyboard under \$200 and request approval."</code></pre></div>
+  <div class="col"><p>In the TUI the invocation pauses and prompts you for the tool result inline. In non-interactive CLI mode the stream returns <code>stopReason: "tool_use"</code> and you reply with a follow-up invoke.</p></div>
+
+  <div class="col">
+  <p class="step">Step 6 &#x2014; Restrict what the agent may call</p>
+  <p><code>allowedTools</code> scopes which tools the model can select. Omit it and everything is allowed &#x2014; including <code>shell</code>.</p>
+  </div>
+  <div class="tw"><table>
+    <thead><tr><th>Pattern</th><th>Example</th><th>Matches</th></tr></thead>
+    <tbody>
+      <tr><td><code>*</code></td><td><code>"*"</code></td><td>All tools</td></tr>
+      <tr><td>Plain name</td><td><code>"shell"</code></td><td>A built-in by name</td></tr>
+      <tr><td>Built-in glob</td><td><code>"file_*"</code></td><td><code>file_operations</code>, <code>file_read</code></td></tr>
+      <tr><td><code>@builtin</code></td><td><code>"@builtin"</code></td><td>All built-in tools</td></tr>
+      <tr><td><code>@builtin/name</code></td><td><code>"@builtin/shell"</code></td><td>One specific built-in</td></tr>
+      <tr><td><code>@server</code></td><td><code>"@git"</code></td><td>All tools from one MCP server</td></tr>
+      <tr><td><code>@server/tool</code></td><td><code>"@git/git_status"</code></td><td>One specific MCP tool</td></tr>
+      <tr><td><code>@server/glob</code></td><td><code>"@git/read_*"</code></td><td>A glob within a server</td></tr>
+      <tr><td><code>@*/tool</code></td><td><code>"@*-mcp/status"</code></td><td>A glob across servers</td></tr>
+    </tbody>
+  </table></div>
+  <div class="code"><div class="code-bar"><span class="code-lang">bash &#xB7; try to make the agent break its own restriction</span></div><pre><code>agentcore invoke --harness research-agent \
+  --allowed-tools "@builtin/file_operations,agentcore_code_interpreter" \
+  "Run 'whoami' in the shell, then tell me what it printed."</code></pre></div>
+  <div class="col"><p>The agent should decline or route around it &#x2014; <code>shell</code> is not in the allowlist.</p>
+
+  <div class="warn"><b><code>allowedTools</code> is not a security boundary for direct execution</b>
+  <p>It scopes <em>LLM tool selection</em> during <code>InvokeHarness</code> only. It has no effect on <code>InvokeAgentRuntimeCommand</code>, which is a separate API with its own IAM action (<code>bedrock-agentcore:InvokeAgentRuntimeCommand</code>) that runs commands directly on the microVM without passing through the model. To prevent direct command execution, do not grant that action in your IAM policies.</p></div></div>
+
+  <div class="ck"><input type="checkbox" id="ck04"><div class="ck-body">
+    <p class="ck-t">Checkpoint 04</p>
+    <p>You saw a <code>toolUse</code> block in the stream for a sandboxed tool, completed one full inline-function round trip (invoke &#x2192; capture &#x2192; return result), and confirmed that an <code>allowedTools</code> list actually stopped the agent from reaching <code>shell</code>.</p>
+  </div></div>
+</section>
+
+<section id="lab05" data-nav="Skills" data-n="05">
+  <div class="lab-head">
+    <div class="lab-n">05</div>
+    <div>
+      <h2>Skills</h2>
+      <p class="lab-sub">~25 min &#xB7; AWS skills &#xB7; Git &#xB7; S3 &#xB7; filesystem paths</p>
+    </div>
+  </div>
+  <div class="col">
+  <div class="goal"><p><strong>Goal</strong>Give the agent domain expertise on demand from four different sources, and understand progressive disclosure &#x2014; why attaching twenty skills does not cost you twenty skills' worth of context window.</p></div>
+
+  <p>A skill is a bundle of markdown and scripts following the open <a href="https://agentskills.io/specification">AgentSkills.io</a> standard: a <code>SKILL.md</code> with YAML frontmatter (name, description) plus optional <code>scripts/</code>, <code>references/</code> and <code>assets/</code> directories.</p>
+
+  <div class="note"><b>Progressive disclosure</b>
+  <p>Only the metadata &#x2014; roughly 100 tokens per skill &#x2014; is injected into the system prompt. Full instructions load on demand via a tool call when the agent decides the skill is relevant. This is what lets you attach a broad catalogue without flooding the context window.</p></div>
+
+  <p>Skills are fetched once per session on the first invocation and persist on disk for the rest of it. When the microVM expires and a new session begins, they are re-fetched to guarantee freshness. Skills set on the harness are defaults; invoke-time skills are <em>appended</em> after them, and on a name collision the invoke-time version wins.</p>
+  </div>
+
+  <div class="tw"><table>
+    <thead><tr><th>Source</th><th>What it does</th><th>Reach for it when</th></tr></thead>
+    <tbody>
+      <tr><td>AWS Skills</td><td>Pre-built skills for AWS services from the AWS Agent Toolkit, selected by glob.</td><td>You want ready-made AWS expertise with zero setup.</td></tr>
+      <tr><td>Git (HTTPS)</td><td>Clone from any public or private Git repo, with sparse checkout for subdirectories.</td><td>Your skills live in GitHub or GitLab and you don't want an S3 copy.</td></tr>
+      <tr><td>Amazon S3</td><td>Fetch from your own bucket using the execution role.</td><td>You need control over versioning, encryption and access governance.</td></tr>
+      <tr><td>Path</td><td>Reference a skill already on the harness filesystem.</td><td>It is baked into your container image or installed at session start.</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="col">
+  <p class="step">Step 1 &#x2014; Enable AWS skills</p>
+  <p>Organised hierarchically and selected with glob patterns.</p>
+  </div>
+  <div class="tw"><table>
+    <thead><tr><th>Category</th><th>Pattern</th><th>Typical contents</th></tr></thead>
+    <tbody>
+      <tr><td>Core</td><td><code>core-skills/*</code></td><td>EC2, S3, Lambda, DynamoDB, CloudWatch, IAM</td></tr>
+      <tr><td>Analytics</td><td><code>specialized-skills/analytics-skills/*</code></td><td>Athena, Glue, QuickSight, data lakes</td></tr>
+      <tr><td>Operations</td><td><code>specialized-skills/operations-skills/*</code></td><td>Troubleshooting, diagnostics, log analysis</td></tr>
+      <tr><td>Storage</td><td><code>specialized-skills/storage-skills/*</code></td><td>S3, EFS, FSx, Backup</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="code"><div class="code-bar"><span class="code-lang">bash &#xB7; everything</span></div><pre><code>aws bedrock-agentcore-control create-harness \
+  --harness-name "MyHarness" \
+  --execution-role-arn "${ROLE_ARN}" \
+  --skills '[{"awsSkills": {}}]'</code></pre></div>
+
+  <div class="code"><div class="code-bar"><span class="code-lang">bash &#xB7; by category</span></div><pre><code>aws bedrock-agentcore-control create-harness \
+  --harness-name "MyHarness" \
+  --execution-role-arn "${ROLE_ARN}" \
+  --skills '[{"awsSkills": {"paths": ["core-skills/*", "specialized-skills/operations-skills/*"]}}]'</code></pre></div>
+
+  <div class="code"><div class="code-bar"><span class="code-lang">python &#xB7; one skill, and a combined selection</span></div><pre><code>response = client.invoke_harness(
+    harnessArn=HARNESS_ARN,
+    runtimeSessionId=SESSION_ID,
+    skills=[{"awsSkills": {"paths": ["core-skills/aws-cdk"]}}],
+    messages=[{"role": "user", "content": [{"text": "Create a CDK stack for a Lambda function."}]}],
+)
+
+# Combine patterns freely
+skills=[{"awsSkills": {"paths": [
+    "core-skills/aws-cdk",
+    "core-skills/aws-serverless",
+    "specialized-skills/storage-skills/*",
+]}}]</code></pre></div>
+  <div class="col"><p>Paths must be relative &#x2014; no leading <code>/</code>, no <code>..</code>. A glob that matches nothing fails the invocation rather than silently doing less than you asked. Multiple <code>awsSkills</code> entries in one payload are merged.</p></div>
+
+  <div class="col">
+  <p class="step">Step 2 &#x2014; Pull a skill from Git</p>
+  </div>
+  <div class="tabs">
+    <div class="tabstrip" role="tablist">
+      <button class="on" role="tab" aria-selected="true">AgentCore CLI</button>
+      <button role="tab" aria-selected="false">boto3</button>
+    </div>
+    <div class="tabpanel on">
+      <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code># Public repo, single skill from a subdirectory
+agentcore add skill --harness my-harness \
+  --git https://github.com/anthropics/skills \
+  --git-path skills/docx
+agentcore deploy
+
+# Private repo &#x2014; --credential names an API key credential holding a PAT
+agentcore add skill --harness my-harness \
+  --git https://github.com/my-org/internal-skills \
+  --git-path excel \
+  --credential my-github-pat
+agentcore deploy</code></pre></div>
+      <div class="col"><p>Remove with <code>agentcore remove skill</code> using the same source flags. To override skills for one call without changing the harness, use <code>agentcore invoke --skills &lt;sources&gt;</code> &#x2014; comma-separated paths, <code>s3://</code> URIs or <code>https://</code> Git URLs. Git authentication is <em>not</em> supported on the invoke override.</p></div>
+    </div>
+    <div class="tabpanel">
+      <div class="code"><div class="code-bar"><span class="code-lang">python</span></div><pre><code># Public repository
+skills=[{"git": {"url": "https://github.com/anthropics/skills", "path": "skills/docx"}}]
+
+# Private repository &#x2014; PAT stored in AgentCore Identity
+skills=[
+    {
+        "git": {
+            "url": "https://github.com/my-org/internal-skills",
+            "path": "excel",
+            "auth": {
+                "credentialArn": "arn:aws:bedrock-agentcore:us-west-2:123456789012:token-vault/default/apikeycredentialprovider/my-github-pat"
+            },
+        }
+    }
+]</code></pre></div>
+    </div>
+  </div>
+  <div class="col">
+  <ul>
+    <li><code>url</code> <em>(required)</em> &#x2014; HTTPS URL of the repository.</li>
+    <li><code>path</code> &#x2014; subdirectory containing the skill; repository root if omitted.</li>
+    <li><code>auth.credentialArn</code> &#x2014; API key credential provider holding a personal access token.</li>
+    <li><code>auth.username</code> &#x2014; git username, defaults to <code>oauth2</code>.</li>
+  </ul>
+  <div class="warn"><b>Git needs egress and finishes in 60 seconds</b>
+  <p>The clone must complete within 60s or the invocation fails. If your harness runs in a VPC, the subnet needs a NAT gateway &#x2014; the same requirement as remote MCP servers and custom container pulls.</p></div>
+  </div>
+
+  <div class="col">
+  <p class="step">Step 3 &#x2014; Fetch a skill from S3</p>
+  <p>Upload a skill directory to a bucket you own, then reference it. S3 sources work through S3 VPC endpoints, so unlike Git they need no NAT gateway.</p>
+  </div>
+  <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code>export SKILL_BUCKET="agentcore-harness-lab-${ACCOUNT_ID}"
+aws s3 mb "s3://${SKILL_BUCKET}"
+
+mkdir -p company-style
+cat &gt; company-style/SKILL.md &lt;&lt;'MD'
+---
+name: company-style
+description: Use when drafting any customer-facing summary or report.
+---
+
+# House style
+
+- Lead with the conclusion, then the evidence.
+- No adjectives in headlines. No exclamation marks.
+- Every number carries its unit and its as-of date.
+- Prefer "we found" over "it was found".
+MD
+
+aws s3 cp company-style/ "s3://${SKILL_BUCKET}/skills/company-style/" --recursive</code></pre></div>
+  <div class="code"><div class="code-bar"><span class="code-lang">python</span></div><pre><code>response = client.invoke_harness(
+    harnessArn=HARNESS_ARN,
+    runtimeSessionId=SESSION_ID,
+    skills=[{"s3": {"uri": "s3://my-skills-bucket/skills/company-style/"}}],
+    messages=[{"role": "user", "content": [{"text": "Draft a summary following our style guide."}]}],
+)</code></pre></div>
+  <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code>agentcore add skill --harness my-harness \
+  --s3 s3://my-skills-bucket/skills/company-style/
+agentcore deploy</code></pre></div>
+  <div class="col"><p>The execution role needs read access. Each S3 skill must be 1 GB or smaller.</p></div>
+  <div class="code"><div class="code-bar"><span class="code-lang">json &#xB7; execution role addition</span></div><pre><code>{
+  "Sid": "AgentCoreSkillS3Access",
+  "Effect": "Allow",
+  "Action": ["s3:GetObject", "s3:ListBucket"],
+  "Resource": [
+    "arn:aws:s3:::&lt;skillBucket&gt;",
+    "arn:aws:s3:::&lt;skillBucket&gt;/*"
+  ]
+}</code></pre></div>
+
+  <div class="col">
+  <p class="step">Step 4 &#x2014; Reference a skill already on the filesystem</p>
+  <p>Two ways to get it there. Bake it into a custom image (Lab 07):</p>
+  </div>
+  <div class="code"><div class="code-bar"><span class="code-lang">dockerfile</span></div><pre><code>COPY skills/xlsx .agents/skills/xlsx</code></pre></div>
+  <div class="col"><p>Or install it at session start, before the first agent invocation:</p></div>
+  <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code>agentcore invoke --exec --harness my-agent --session-id "$SESSION" \
+  "git clone --depth 1 https://github.com/anthropics/skills /tmp/skills && cp -r /tmp/skills/skills/xlsx .agents/skills/xlsx"</code></pre></div>
+  <div class="code"><div class="code-bar"><span class="code-lang">python &#xB7; then reference it</span></div><pre><code>skills=[{"path": ".agents/skills/xlsx"}]</code></pre></div>
+
+  <div class="col">
+  <p class="step">Step 5 &#x2014; Combine all four</p>
+  <p>They coexist in a single payload. This is the shape a mature agent ends up with: AWS expertise, an open-source capability, your house style, and something from your own image.</p>
+  </div>
+  <div class="code"><div class="code-bar"><span class="code-lang">python</span></div><pre><code>response = client.invoke_harness(
+    harnessArn=HARNESS_ARN,
+    runtimeSessionId=SESSION_ID,
+    skills=[
+        {"awsSkills": {"paths": ["core-skills/aws-cdk"]}},
+        {"git": {"url": "https://github.com/anthropics/skills", "path": "skills/docx"}},
+        {"s3": {"uri": "s3://my-bucket/skills/company-style/"}},
+        {"path": ".agents/skills/xlsx"},
+    ],
+    messages=[{"role": "user", "content": [{"text": "Help me with this project."}]}],
+)</code></pre></div>
+
+  <div class="col">
+  <h4>Failure modes</h4>
+  <p>Every fetch failure fails the invocation with a descriptive error. Skills are never silently skipped &#x2014; which is what you want, because a silently-missing skill produces a plausible but unguided answer.</p>
+  </div>
+  <div class="tw"><table>
+    <thead><tr><th>Failure</th><th>Error</th></tr></thead>
+    <tbody>
+      <tr><td>S3 access denied</td><td><code>Failed to fetch skill: AccessDeniedException. Ensure execution role has s3:GetObject permission.</code></td></tr>
+      <tr><td>S3 object not found</td><td><code>Skill source not found: s3://&#x2026;</code></td></tr>
+      <tr><td>Git clone network failure</td><td><code>Failed to clone skill: could not resolve host</code></td></tr>
+      <tr><td>Git auth denied</td><td><code>Failed to clone skill: authentication failed</code></td></tr>
+      <tr><td>Git path missing in repo</td><td><code>Skill path 'x' not found in repository</code></td></tr>
+      <tr><td>Git timeout</td><td><code>Failed to clone skill: operation timed out after 60s</code></td></tr>
+      <tr><td>Over the size limit</td><td><code>Skill exceeds 1GB size limit</code></td></tr>
+      <tr><td>Glob matched nothing</td><td><code>AWS skill path 'x' matched no skills</code></td></tr>
+      <tr><td>Path traversal attempt</td><td><code>Invalid AWS skill path: must be a relative path without '..'</code></td></tr>
+      <tr><td>Bundle missing in runtime</td><td><code>AWS Skills are not available in this runtime (missing directory: /opt/amazon/skills)</code></td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="col"><div class="warn"><b>Skills are trusted input</b>
+  <p>The harness does not validate, sanitize or inspect skill content before handing it to the agent &#x2014; and skills can be overridden per invocation. If your application forwards caller-supplied fields to <code>InvokeHarness</code>, a caller can point the harness at their own S3 prefix or Git repo containing arbitrary instructions and scripts. Strip the <code>skills</code> field from untrusted requests, or allowlist permitted prefixes and repositories.</p></div></div>
+
+  <div class="ck"><input type="checkbox" id="ck05"><div class="ck-body">
+    <p class="ck-t">Checkpoint 05</p>
+    <p>You attached at least two sources &#x2014; one AWS skills glob and one of Git or S3 &#x2014; and the agent's output visibly changed to follow the attached guidance. Bonus: you triggered one of the errors above on purpose and recognised it.</p>
+  </div></div>
+</section>
+
+<section id="lab06" data-nav="Memory" data-n="06">
+  <div class="lab-head">
+    <div class="lab-n">06</div>
+    <div>
+      <h2>Memory</h2>
+      <p class="lab-sub">~30 min &#xB7; short/long term &#xB7; strategies &#xB7; actor scoping &#xB7; truncation</p>
+    </div>
+  </div>
+  <div class="col">
+  <div class="goal"><p><strong>Goal</strong>Understand why Lab 02's second question worked, then take control of it: tune strategies, isolate memory per user with <code>actorId</code>, attach your own Memory resource, and decide what happens when a conversation outgrows the context window.</p></div>
+
+  <p>On every invocation the harness persists the conversation to AgentCore Memory, scoped by session ID &#x2014; and by actor ID when you supply one. On the next invocation with the same session ID, history is loaded <em>before</em> the agent reasons. You never resend previous messages; you send only the new one. This survives the microVM expiring.</p>
+
+  <h4>The three concepts</h4>
+  <ul>
+    <li><b style="display:inline;font-family:var(--mono);font-size:13px;letter-spacing:0;text-transform:none">Short-term memory</b> &#x2014; raw events (messages, tool calls) within a session. This is what gives continuity across turns.</li>
+    <li><b style="display:inline;font-family:var(--mono);font-size:13px;letter-spacing:0;text-transform:none">Long-term memory</b> &#x2014; durable knowledge extracted by configurable strategies and retrievable by semantic search in <em>later</em> sessions.</li>
+    <li><b style="display:inline;font-family:var(--mono);font-size:13px;letter-spacing:0;text-transform:none">Actor ID</b> &#x2014; who is interacting: a user, another agent, a system. Events are scoped by actorId + sessionId, so each actor's memory is isolated. Long-term retrieval uses actorId as a template variable in namespace paths such as <code>/summary/{actorId}/{sessionId}/</code>.</li>
+  </ul>
+
+  <p class="step">Step 1 &#x2014; Managed memory, and tuning it</p>
+  <p>By default the harness provisions a Memory instance for you with semantic + summarization strategies and 30-day event expiry. Nothing to create. To customise at create time:</p>
+  </div>
+  <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code>aws bedrock-agentcore-control create-harness \
+  --harness-name "MyHarness" \
+  --execution-role-arn "$ROLE_ARN" \
+  --memory '{"managedMemoryConfiguration": {"strategies": ["SEMANTIC", "SUMMARIZATION", "USER_PREFERENCE"], "eventExpiryDuration": 60}}'</code></pre></div>
+  <div class="code"><div class="code-bar"><span class="code-lang">bash &#xB7; add a strategy later</span></div><pre><code>aws bedrock-agentcore-control update-harness \
+  --harness-id "$HARNESS_ID" \
+  --memory '{"optionalValue": {"managedMemoryConfiguration": {"strategies": ["SEMANTIC", "SUMMARIZATION", "USER_PREFERENCE", "EPISODIC"]}}}'</code></pre></div>
+  <div class="code"><div class="code-bar"><span class="code-lang">bash &#xB7; AgentCore CLI</span></div><pre><code>agentcore create --name myagent          # memory enabled by default
+agentcore create --name myagent --no-harness-memory   # skip it
+agentcore deploy</code></pre></div>
+
+  <div class="tw"><table>
+    <thead><tr><th>Strategy</th><th>What it extracts</th></tr></thead>
+    <tbody>
+      <tr><td><code>SEMANTIC</code></td><td>Factual knowledge from conversations, retrievable by semantic search.</td></tr>
+      <tr><td><code>SUMMARIZATION</code></td><td>Running summaries, scoped by actor and session.</td></tr>
+      <tr><td><code>USER_PREFERENCE</code></td><td>Preferences and settings expressed during conversation.</td></tr>
+      <tr><td><code>EPISODIC</code></td><td>Significant events and experiences as discrete episodes.</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="col">
+  <p>Grant the execution role access to memory operations:</p>
+  </div>
+  <div class="code"><div class="code-bar"><span class="code-lang">json &#xB7; execution role addition</span></div><pre><code>{
+  "Sid": "AgentCoreMemory",
+  "Effect": "Allow",
+  "Action": [
+    "bedrock-agentcore:CreateEvent",
+    "bedrock-agentcore:DeleteEvent",
+    "bedrock-agentcore:GetEvent",
+    "bedrock-agentcore:ListEvents",
+    "bedrock-agentcore:RetrieveMemoryRecords"
+  ],
+  "Resource": "arn:aws:bedrock-agentcore:&lt;region&gt;:&lt;accountId&gt;:memory/&lt;memoryId&gt;"
+}</code></pre></div>
+
+  <div class="col"><div class="note"><b>Managed memory has guardrails on its lifecycle</b>
+  <p>Strategy configuration is controlled through <code>UpdateHarness</code>, though you can still read and write events and query records directly through the Memory APIs. It cannot be deleted directly through the Memory APIs. To turn it into an ordinary Memory resource, either switch the harness to BYO or disabled with <code>UpdateHarness</code>, or pass <code>deleteManagedMemory=false</code> on deletion to disassociate instead &#x2014; <code>DeleteHarness</code> cascade-deletes it by default.</p></div></div>
+
+  <div class="col">
+  <p class="step">Step 2 &#x2014; Prove per-user isolation</p>
+  <p>Run these in order. Two actors, <em>one</em> session ID.</p>
+  </div>
+  <div class="code"><div class="code-bar"><span class="code-lang">python</span></div><pre><code>def ask_as(actor, text):
+    return client.invoke_harness(
+        harnessArn=HARNESS_ARN,
+        runtimeSessionId=SESSION_ID,
+        actorId=actor,
+        messages=[{"role": "user", "content": [{"text": text}]}],
+    )
+
+ask_as("user-123", "Remember that I always want answers in metric units.")
+ask_as("user-456", "What units do I prefer?")     # should not know
+ask_as("user-123", "What units do I prefer?")     # should say metric</code></pre></div>
+
+  <div class="col">
+  <p class="step">Step 3 &#x2014; Bring your own Memory</p>
+  <p>Attach an existing Memory instance when you need custom namespace templates, KMS encryption, or memory shared across several harnesses.</p>
+  </div>
+  <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code>aws bedrock-agentcore-control create-memory \
+  --name "MyMemory" \
+  --event-expiry-duration 30 \
+  --description "Memory for my harness"
+
+aws bedrock-agentcore-control update-harness \
+  --harness-id "$HARNESS_ID" \
+  --memory '{"optionalValue": {"agentCoreMemoryConfiguration": {"arn": "arn:aws:bedrock-agentcore:us-west-2:123456789012:memory/MyMemory-abc123"}}}'</code></pre></div>
+  <div class="code"><div class="code-bar"><span class="code-lang">bash &#xB7; or at create time on the CLI</span></div><pre><code>agentcore create --name myagent \
+  --memory-arn "arn:aws:bedrock-agentcore:us-west-2:123456789012:memory/MyMemory-abc123"
+agentcore deploy</code></pre></div>
+  <div class="code"><div class="code-bar"><span class="code-lang">bash &#xB7; or turn memory off entirely</span></div><pre><code>aws bedrock-agentcore-control update-harness \
+  --harness-id "$HARNESS_ID" \
+  --memory '{"optionalValue": {"disabled": {}}}'</code></pre></div>
+
+  <div class="col">
+  <p class="step">Step 4 &#x2014; Long-term retrieval</p>
+  <p>When a harness has active strategies, retrieval is automatic: the harness derives a retrieval configuration from the Memory instance's active strategies and, on each invocation, queries relevant long-term memories and injects them into context before reasoning. Defaults are <code>topK=10</code> and <code>relevanceScore=0.2</code> per namespace, for managed and BYO alike.</p>
+  <p>Supply <code>retrievalConfig</code> explicitly and your values take priority &#x2014; no automatic derivation happens at all. Use it to choose namespaces, tune the knobs, or disable retrieval for a specific strategy.</p>
+  </div>
+  <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code>aws bedrock-agentcore-control update-harness \
+  --harness-id "$HARNESS_ID" \
+  --memory '{"optionalValue": {"agentCoreMemoryConfiguration": {
+      "arn": "arn:aws:bedrock-agentcore:us-west-2:123456789012:memory/MyMemory-abc123",
+      "retrievalConfig": {
+        "/facts/{actorId}/": {"topK": 5, "relevanceScore": 0.5, "strategyId": "FactExtractor-abc123"}
+      }}}}'</code></pre></div>
+  <div class="col"><div class="warn"><b>Refresh retrieval after changing BYO strategies</b>
+  <p>If you add or remove strategies on a BYO Memory instance <em>after</em> attaching it, call <code>UpdateHarness</code> to refresh the derived retrieval configuration. Managed memory refreshes automatically when strategies change through <code>UpdateHarness</code>.</p></div></div>
+
+  <div class="col">
+  <p class="step">Step 5 &#x2014; Decide what happens when context overflows</p>
+  </div>
+  <div class="tw"><table>
+    <thead><tr><th>Strategy</th><th>Behaviour</th></tr></thead>
+    <tbody>
+      <tr><td><code>sliding_window</code> <em>(default)</em></td><td>Keeps the most recent N messages. Simple and predictable.</td></tr>
+      <tr><td><code>summarization</code></td><td>Compresses older messages into a summary &#x2014; more context in fewer tokens.</td></tr>
+      <tr><td><code>none</code></td><td>No truncation. Only if you manage context size yourself.</td></tr>
+    </tbody>
+  </table></div>
+  <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code>aws bedrock-agentcore-control update-harness \
+  --harness-id "$HARNESS_ID" \
+  --truncation '{"strategy": "sliding_window", "slidingWindowConfig": {"numMessages": 30}}'</code></pre></div>
+
+  <div class="ck"><input type="checkbox" id="ck06"><div class="ck-body">
+    <p class="ck-t">Checkpoint 06</p>
+    <p><code>user-456</code> did not know <code>user-123</code>'s preference, and <code>user-123</code> did. You can also say what changes when you set <code>retrievalConfig</code> explicitly rather than leaving it to derivation.</p>
+  </div></div>
+</section>
+
+<section id="lab07" data-nav="Environment" data-n="07">
+  <div class="lab-head">
+    <div class="lab-n">07</div>
+    <div>
+      <h2>Environment and filesystem</h2>
+      <p class="lab-sub">~35 min &#xB7; direct shell &#xB7; custom containers &#xB7; EFS &#xB7; S3 Files &#xB7; VPC</p>
+    </div>
+  </div>
+  <div class="col">
+  <div class="goal"><p><strong>Goal</strong>Work with the microVM directly. You will run commands on it without going through the model at all, package your own environment, and mount storage that outlives the session.</p></div>
+
+  <p class="step">Step 1 &#x2014; Run commands without the agent loop</p>
+  <p>Not everything needs to go through the model. <code>InvokeAgentRuntimeCommand</code> gives you a shell on the harness microVM: deterministic execution, no reasoning, no token cost, no ambiguity. Use it to prepare the environment before an invocation, act on what the agent produced afterwards, or just inspect the VM while developing.</p>
+  </div>
+  <div class="tabs">
+    <div class="tabstrip" role="tablist">
+      <button class="on" role="tab" aria-selected="true">AgentCore CLI</button>
+      <button role="tab" aria-selected="false">boto3</button>
+    </div>
+    <div class="tabpanel on">
+      <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code>export SESSION_ID="$(uuidgen)"
+
+# Prepare: install dependencies before the agent starts
+agentcore invoke --exec --harness my-agent --session-id "$SESSION_ID" \
+  "pip install pandas matplotlib"
+
+# Let the agent work
+agentcore invoke --harness my-agent --session-id "$SESSION_ID" \
+  "Load /tmp/input.csv, compute monthly totals, save to /tmp/results.csv."
+
+# Act on the output &#x2014; same session, so same filesystem
+agentcore invoke --exec --harness my-agent --session-id "$SESSION_ID" \
+  "ls -la /tmp && cat /tmp/results.csv"</code></pre></div>
+      <div class="col"><p>In the TUI, press <code>!</code> to enter exec mode and run commands inline.</p></div>
+    </div>
+    <div class="tabpanel">
+      <div class="code"><div class="code-bar"><span class="code-lang">python</span></div><pre><code>response = client.invoke_agent_runtime_command(
+    agentRuntimeArn=HARNESS_ARN,
+    runtimeSessionId=SESSION_ID,
+    body={"command": "ls -la /workspace"},
+)
+
+for event in response["stream"]:
+    chunk = event.get("chunk", {})
+    if "contentDelta" in chunk:
+        delta = chunk["contentDelta"]
+        if "stdout" in delta:
+            print(delta["stdout"], end="", flush=True)
+        if "stderr" in delta:
+            print(delta["stderr"], end="", flush=True)
+    elif "contentStop" in chunk:
+        print(f"\n[exit code: {chunk['contentStop']['exitCode']}]")</code></pre></div>
+    </div>
+  </div>
+  <div class="col">
+  <p>The base environment ships Python and bash. For <code>git</code>, <code>node</code> or anything else, install it at session start or bake a custom image.</p>
+  <div class="warn"><b>Commands run as root, and this API bypasses the model</b>
+  <p>Commands execute as uid 0 in the microVM &#x2014; analogous to root on your own EC2 instance, where the IAM permission is the access gate rather than the in-VM privilege level. A <code>USER</code> directive in your Dockerfile applies to the agent process only; <code>InvokeAgentRuntimeCommand</code> runs at a higher privilege, like <code>docker exec</code> defaulting to root. It also does not respect <code>allowedTools</code>. If you do not want direct command execution, do not grant <code>bedrock-agentcore:InvokeAgentRuntimeCommand</code>.</p></div>
+  </div>
+
+  <div class="col">
+  <p class="step">Step 2 &#x2014; Set environment variables</p>
+  <p>Passed to the runtime container and visible to the agent and any custom container in the session.</p>
+  </div>
+  <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code>aws bedrock-agentcore-control create-harness \
+  --harness-name "MyHarness" \
+  --execution-role-arn "$ROLE_ARN" \
+  --environment-variables '{"MY_API_URL": "https://api.example.com", "LOG_LEVEL": "debug"}'</code></pre></div>
+  <div class="code"><div class="code-bar"><span class="code-lang">json &#xB7; or in harness.json</span></div><pre><code>{
+  "environmentVariables": {
+    "MY_API_URL": "https://api.example.com",
+    "LOG_LEVEL": "debug"
+  }
+}</code></pre></div>
+  <div class="col"><p>Verify with the exec API &#x2014; a good use of Step 1:</p></div>
+  <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code>agentcore invoke --exec --harness my-agent --session-id "$SESSION_ID" "env | grep MY_API_URL"</code></pre></div>
+
+  <div class="col">
+  <p class="step">Step 3 &#x2014; Bring your own container</p>
+  <p>When Python and bash are not enough, package your source, dependencies, runtimes and tools into an image, push it to ECR, and point the harness at it.</p>
+  <div class="warn"><b>Two rules that catch people out</b>
+  <p>Images must be built for <code>linux/arm64</code>. And the harness <em>overrides your <code>ENTRYPOINT</code> and <code>CMD</code></em> &#x2014; it keeps the container running as an environment, so your startup command never executes. Your installed software, filesystem and environment variables are all available; if you need a background process such as a dev server, start it with <code>InvokeAgentRuntimeCommand</code> after the session begins.</p></div>
+  </div>
+  <div class="code"><div class="code-bar"><span class="code-lang">dockerfile</span></div><pre><code># syntax=docker/dockerfile:1
+FROM --platform=linux/arm64 public.ecr.aws/docker/library/python:3.12-slim
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      git curl jq ripgrep && rm -rf /var/lib/apt/lists/*
+
+RUN pip install --no-cache-dir pandas matplotlib duckdb
+
+# Bake in a skill so it can be referenced by path (Lab 05, Step 4)
+COPY skills/xlsx .agents/skills/xlsx</code></pre></div>
+  <div class="tabs">
+    <div class="tabstrip" role="tablist">
+      <button class="on" role="tab" aria-selected="true">AgentCore CLI</button>
+      <button role="tab" aria-selected="false">AWS CLI</button>
+    </div>
+    <div class="tabpanel on">
+      <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code># The CLI builds, pushes to ECR and attaches on deploy
+agentcore create --name coding-agent --container ./Dockerfile
+agentcore deploy
+
+# Or reference a pre-built public image
+agentcore create --name node-agent \
+  --container public.ecr.aws/docker/library/node:slim
+agentcore deploy</code></pre></div>
+    </div>
+    <div class="tabpanel">
+      <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code>aws bedrock-agentcore-control create-harness \
+  --harness-name "CodingAgent" \
+  --execution-role-arn "$ROLE_ARN" \
+  --environment-artifact '{"containerConfiguration": {"containerUri": "123456789012.dkr.ecr.us-west-2.amazonaws.com/my-dev-env:latest"}}' \
+  --system-prompt '[{"text": "You are an expert TypeScript developer."}]'</code></pre></div>
+    </div>
+  </div>
+  <div class="col"><p>A private ECR image needs pull permissions on the execution role:</p></div>
+  <div class="code"><div class="code-bar"><span class="code-lang">json &#xB7; execution role addition</span></div><pre><code>{
+  "Sid": "ECRImageAccess",
+  "Effect": "Allow",
+  "Action": ["ecr:GetDownloadUrlForLayer", "ecr:BatchGetImage"],
+  "Resource": "arn:aws:ecr:&lt;ecrRegion&gt;:&lt;ecrAccountId&gt;:repository/&lt;ecrRepoName&gt;"
+},
+{
+  "Sid": "ECRTokenAccess",
+  "Effect": "Allow",
+  "Action": "ecr:GetAuthorizationToken",
+  "Resource": "*"
+}</code></pre></div>
+
+  <div class="col">
+  <p class="step">Step 4 &#x2014; Mount persistent storage</p>
+  <p>Files written to a mount survive session termination and are visible to later invocations. Three types:</p>
+  </div>
+  <div class="tw"><table>
+    <thead><tr><th>Type</th><th>Scope</th><th>VPC?</th></tr></thead>
+    <tbody>
+      <tr><td>Session storage</td><td>Service-managed, per-session. Persists across stop/resume for the same <code>runtimeSessionId</code>.</td><td>Not required</td></tr>
+      <tr><td>EFS access point</td><td>Your own EFS, shared across sessions, harnesses and agents.</td><td>Required</td></tr>
+      <tr><td>S3 Files access point</td><td>Your own S3 Files filesystem, syncing bidirectionally with the backing bucket.</td><td>Required</td></tr>
+    </tbody>
+  </table></div>
+  <div class="col"><p>Mount paths must be under <code>/mnt</code>. Start with session storage &#x2014; no VPC needed:</p></div>
+  <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code>aws bedrock-agentcore-control update-harness \
+  --harness-id "$HARNESS_ID" \
+  --environment '{"agentCoreRuntimeEnvironment": {"filesystemConfigurations": [{"sessionStorage": {"mountPath": "/mnt/data/"}}]}}'</code></pre></div>
+  <div class="code"><div class="code-bar"><span class="code-lang">bash &#xB7; AgentCore CLI</span></div><pre><code>agentcore create --name myagent --session-storage-mount-path /mnt/data/
+# or on an existing harness
+agentcore add harness --name my-agent --session-storage /mnt/data/
+agentcore deploy</code></pre></div>
+
+  <div class="col"><p>EFS and S3 Files both require VPC network mode. EFS:</p></div>
+  <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code>aws bedrock-agentcore-control create-harness \
+  --harness-name "SharedToolsAgent" \
+  --execution-role-arn "$ROLE_ARN" \
+  --environment '{
+    "agentCoreRuntimeEnvironment": {
+      "networkConfiguration": {
+        "networkMode": "VPC",
+        "networkModeConfig": {
+          "subnets": ["subnet-abc123", "subnet-def456"],
+          "securityGroups": ["sg-abc123"]
+        }
+      },
+      "filesystemConfigurations": [
+        {
+          "efsAccessPoint": {
+            "accessPointArn": "arn:aws:elasticfilesystem:us-west-2:123456789012:access-point/fsap-0123456789abcdef0",
+            "mountPath": "/mnt/efs"
+          }
+        }
+      ]
+    }
+  }'</code></pre></div>
+  <div class="code"><div class="code-bar"><span class="code-lang">bash &#xB7; S3 Files, on the CLI</span></div><pre><code>agentcore add harness --name data-agent \
+  --network-mode VPC \
+  --subnets subnet-abc123,subnet-def456 \
+  --security-groups sg-abc123 \
+  --s3-access-point arn:aws:s3files:us-west-2:123456789012:file-system/fs-0123456789abcdef0/access-point/fsap-0123456789abcdef0:/mnt/s3data
+agentcore deploy</code></pre></div>
+  <div class="col">
+  <p>The flags take <code>&lt;accessPointArn&gt;:&lt;mountPath&gt;</code>. Access point ARNs contain colons themselves, so the mount path is read from the segment after the <em>final</em> colon. Both <code>--efs-access-point</code> and <code>--s3-access-point</code> are repeatable, up to 2 mounts each.</p>
+  <div class="warn"><b><code>UpdateHarness</code> replaces the whole list</b>
+  <p><code>filesystemConfigurations</code> is not merged. To add a mount to a harness that already has one, call <code>GetHarness</code> first and send the complete desired list &#x2014; existing entries plus the new one.</p></div>
+  <div class="warn"><b>VPC mode needs a NAT gateway</b>
+  <p>The harness pulls its application container from Amazon ECR Public at the start of every session. ECR Public does not support VPC endpoints, so your VPC must have a NAT gateway with a route to an internet gateway and allow outbound access to <code>public.ecr.aws</code>. Without it, sessions fail to start with image pull timeouts. The same egress is what Git skills and remote MCP servers need.</p></div>
+  </div>
+
+  <div class="ck"><input type="checkbox" id="ck07"><div class="ck-body">
+    <p class="ck-t">Checkpoint 07</p>
+    <p>You ran a shell command on the microVM with <code>--exec</code> and saw its stdout and exit code, and a file written by the agent in one invocation was still readable by a later <code>--exec</code> call on the same session ID.</p>
+  </div></div>
+</section>
+
+<section id="lab08" data-nav="Observability" data-n="08">
+  <div class="lab-head">
+    <div class="lab-n">08</div>
+    <div>
+      <h2>Observability and cost controls</h2>
+      <p class="lab-sub">~25 min &#xB7; traces &#xB7; logs &#xB7; limits &#xB7; CloudTrail &#xB7; tags</p>
+    </div>
+  </div>
+  <div class="col">
+  <div class="goal"><p><strong>Goal</strong>See every step the agent took in one place, then put hard caps on it so a runaway loop cannot burn through your budget.</p></div>
+
+  <p class="step">Step 1 &#x2014; Read the traces</p>
+  <p>Every invocation generates traces, logs and metrics through AgentCore Observability in CloudWatch, with no extra configuration. Model calls, tool invocations, memory operations and shell commands each appear with timing and payload detail. Traces are available from the very first invocation &#x2014; assuming you enabled Transaction Search in Lab 01.</p>
+  </div>
+  <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code># Stream logs
+agentcore logs --harness research-agent
+
+# Filter
+agentcore logs --harness research-agent --since 1h --level error
+
+# List recent traces
+agentcore traces list --harness research-agent
+
+# Inspect one
+agentcore traces get &lt;trace-id&gt; --harness research-agent</code></pre></div>
+  <div class="col"><p>Or open the <a href="https://us-west-2.console.aws.amazon.com/cloudwatch/home?region=us-west-2#/gen-ai-observability/agent-core/agents">AgentCore Observability dashboard</a> in CloudWatch. The value here is the unified view &#x2014; one place that shows what the agent did across every capability, instead of stitching together separate log groups for the model, the browser, the code interpreter and memory.</p>
+  <p>Go back to a Lab 04 invocation that used both the browser and the code interpreter, and follow it end to end in a single trace.</p>
+
+  <p class="step">Step 2 &#x2014; Understand what CloudTrail records</p>
+  <p>Harness operations are logged as management events (control plane) and data events (data plane). One thing will surprise you: harness resources appear under the resource type <code>AWS::BedrockAgentCore::Runtime</code>, not a harness-specific type, because the harness is a managed abstraction over Runtime.</p>
+  </div>
+  <div class="tw"><table>
+    <thead><tr><th>Plane</th><th>Event names</th></tr></thead>
+    <tbody>
+      <tr><td>Management</td><td><code>CreateHarness</code>, <code>UpdateHarness</code>, <code>DeleteHarness</code>, <code>GetHarness</code>, <code>ListHarnesses</code></td></tr>
+      <tr><td>Data</td><td><code>InvokeAgentRuntime</code>, <code>InvokeAgentRuntimeCommand</code></td></tr>
+    </tbody>
+  </table></div>
+  <div class="col"><p>Note that data-plane operations appear under the underlying Runtime API names, not <code>InvokeHarness</code>. The <code>resources.ARN</code> field carries the harness ARN for control-plane events and the runtime ARN for data-plane events. Write your CloudTrail queries accordingly.</p>
+
+  <p class="step">Step 3 &#x2014; Set hard caps</p>
+  <p>All of these are optional; omit them for service defaults.</p>
+  </div>
+  <div class="tw"><table>
+    <thead><tr><th>Limit</th><th>Caps</th><th>Default</th></tr></thead>
+    <tbody>
+      <tr><td><code>maxIterations</code></td><td>Reasoning/action cycles per invocation</td><td>75</td></tr>
+      <tr><td><code>timeoutSeconds</code></td><td>Wall-clock time for one invocation</td><td>3600</td></tr>
+      <tr><td><code>maxTokens</code></td><td>Token budget per invocation</td><td>&#x2014;</td></tr>
+      <tr><td><code>idleRuntimeSessionTimeout</code></td><td>How long an idle microVM stays warm</td><td>900</td></tr>
+      <tr><td><code>maxLifetime</code></td><td>Maximum lifetime of a microVM session</td><td>28800</td></tr>
+    </tbody>
+  </table></div>
+  <div class="tabs">
+    <div class="tabstrip" role="tablist">
+      <button class="on" role="tab" aria-selected="true">AgentCore CLI</button>
+      <button role="tab" aria-selected="false">AWS CLI</button>
+    </div>
+    <div class="tabpanel on">
+      <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code>agentcore add harness --name bounded-agent \
+  --max-iterations 50 --timeout 1800 --max-tokens 8192 \
+  --truncation-strategy sliding_window \
+  --idle-timeout 600 --max-lifetime 14400
+agentcore deploy
+
+# Override for one call
+agentcore invoke --harness bounded-agent --max-iterations 20 --harness-timeout 600 \
+  "Quick lookup: what's the weather in Seattle?"</code></pre></div>
+    </div>
+    <div class="tabpanel">
+      <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code>aws bedrock-agentcore-control update-harness \
+  --harness-id "$HARNESS_ID" \
+  --max-iterations 50 \
+  --timeout-seconds 1800 \
+  --max-tokens 8192</code></pre></div>
+      <div class="col"><p>Or pass <code>maxIterations</code>, <code>timeoutSeconds</code> or <code>maxTokens</code> directly in <code>invoke_harness</code> to override a single call.</p></div>
+    </div>
+  </div>
+
+  <div class="col">
+  <h4>Exercise: make the agent hit a limit</h4>
+  <p>Set <code>--max-iterations 2</code> and give it a task that genuinely needs more cycles. Confirm you get <code>stopReason: "max_iterations_exceeded"</code> rather than a hallucinated answer.</p>
+  </div>
+  <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code>agentcore invoke --harness research-agent --max-iterations 2 --verbose \
+  "Browse three separate sources, extract the population of each, and chart them."</code></pre></div>
+  <div class="col"><div class="note"><b>Runtime quotas apply too</b>
+  <p>Because the harness is backed by AgentCore Runtime, invocations are also subject to Runtime service quotas &#x2014; not only the limits you set. Check both the harness and Runtime service quota pages when sizing for load.</p></div></div>
+
+  <div class="col">
+  <p class="step">Step 4 &#x2014; Tag for cost allocation</p>
+  </div>
+  <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code>aws bedrock-agentcore-control create-harness \
+  --harness-name "MyHarness" \
+  --execution-role-arn "$ROLE_ARN" \
+  --tags '{"team": "platform", "environment": "staging"}'</code></pre></div>
+  <div class="code"><div class="code-bar"><span class="code-lang">json &#xB7; or in harness.json</span></div><pre><code>{
+  "tags": {
+    "team": "platform",
+    "environment": "staging"
+  }
+}</code></pre></div>
+  <div class="col"><p>Tags flow through to the deployed CloudFormation resources, so they show up in Cost Explorer against the underlying capabilities you are actually paying for.</p></div>
+
+  <div class="ck"><input type="checkbox" id="ck08"><div class="ck-body">
+    <p class="ck-t">Checkpoint 08</p>
+    <p>You followed one multi-tool invocation end to end in a single CloudWatch trace, and you deliberately triggered <code>max_iterations_exceeded</code> and saw it in the stream.</p>
+  </div></div>
+</section>
+
+<section id="lab09" data-nav="Versions" data-n="09">
+  <div class="lab-head">
+    <div class="lab-n">09</div>
+    <div>
+      <h2>Versioning and endpoints</h2>
+      <p class="lab-sub">~20 min &#xB7; immutable versions &#xB7; named endpoints &#xB7; instant rollback</p>
+    </div>
+  </div>
+  <div class="col">
+  <div class="goal"><p><strong>Goal</strong>Ship a change to production safely and roll it back in one call. Every harness update mints an immutable version; endpoints are the named pointers you move deliberately.</p></div>
+
+  <ul>
+    <li>Creating a harness automatically creates version 1.</li>
+    <li>Every update creates a new version with a <em>complete, self-contained</em> configuration &#x2014; model, prompt, tools, memory, limits, environment.</li>
+    <li>Versions are immutable once created.</li>
+    <li>The <code>DEFAULT</code> endpoint always follows the latest version. Named endpoints do not move until you move them.</li>
+  </ul>
+
+  <p class="step">Step 1 &#x2014; Trace the lifecycle</p>
+  <p>Read this table as a story: a change lands, <code>DEFAULT</code> follows it instantly, and <code>PROD</code> stays where you left it until you decide.</p>
+  </div>
+  <div class="tw"><table>
+    <thead><tr><th>Change</th><th>Version behaviour</th><th>Latest</th><th>Endpoints</th></tr></thead>
+    <tbody>
+      <tr><td>Initial creation</td><td>Creates V1 automatically</td><td>V1</td><td>DEFAULT &#x2192; V1</td></tr>
+      <tr><td>Model change</td><td>New version with the updated model</td><td>V2</td><td>DEFAULT &#x2192; V2 automatically</td></tr>
+      <tr><td>Create PROD endpoint at V2</td><td>No new version</td><td>V2</td><td>PROD &#x2192; V2</td></tr>
+      <tr><td>Tool or skill update</td><td>New version with updated tools</td><td>V3</td><td>DEFAULT &#x2192; V3; PROD stays V2</td></tr>
+      <tr><td>Update PROD to V3</td><td>No new version</td><td>V3</td><td>PROD &#x2192; V3</td></tr>
+      <tr><td>Limits or environment change</td><td>New version with updated parameters</td><td>V4</td><td>DEFAULT &#x2192; V4; PROD stays V3</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="col">
+  <p class="step">Step 2 &#x2014; Create a pinned endpoint</p>
+  <p>Omit <code>targetVersion</code> and the endpoint points at whatever is latest at creation time.</p>
+  </div>
+  <div class="tabs">
+    <div class="tabstrip" role="tablist">
+      <button class="on" role="tab" aria-selected="true">boto3</button>
+      <button role="tab" aria-selected="false">AWS CLI</button>
+    </div>
+    <div class="tabpanel on">
+      <div class="code"><div class="code-bar"><span class="code-lang">python</span></div><pre><code>import boto3
+
+control_client = boto3.client('bedrock-agentcore-control', region_name='us-west-2')
+
+response = control_client.create_harness_endpoint(
+    harnessId='MyHarness-UuFdkQoXSL',
+    endpointName='production-endpoint',
+    targetVersion='2',
+    description='Production endpoint pinned to V2'
+)
+
+print(response)</code></pre></div>
+    </div>
+    <div class="tabpanel">
+      <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code>aws bedrock-agentcore-control create-harness-endpoint \
+  --harness-id "$HARNESS_ID" \
+  --endpoint-name "production-endpoint" \
+  --target-version "2" \
+  --description "Production endpoint pinned to V2"</code></pre></div>
+    </div>
+  </div>
+
+  <div class="col">
+  <p class="step">Step 3 &#x2014; Promote, then roll back</p>
+  <p>Make a change &#x2014; swap the model, add a tool &#x2014; which mints V3. <code>DEFAULT</code> moves; your endpoint does not. Then promote:</p>
+  </div>
+  <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code>aws bedrock-agentcore-control update-harness-endpoint \
+  --harness-id "$HARNESS_ID" \
+  --endpoint-name "production-endpoint" \
+  --target-version "3" \
+  --description "Updated production endpoint"</code></pre></div>
+  <div class="code"><div class="code-bar"><span class="code-lang">python</span></div><pre><code>response = control_client.update_harness_endpoint(
+    harnessId='MyHarness-UuFdkQoXSL',
+    endpointName='production-endpoint',
+    targetVersion='2',          # roll back by pointing at the earlier version
+    description='Rolled back to V2'
+)</code></pre></div>
+  <div class="col"><p>That is the whole rollback story: point the endpoint at an earlier version. No redeploy, no rebuild &#x2014; the old version still exists, immutably.</p></div>
+
+  <div class="col">
+  <p class="step">Step 4 &#x2014; Enumerate</p>
+  </div>
+  <div class="code"><div class="code-bar"><span class="code-lang">python</span></div><pre><code>versions = control_client.list_harness_versions(harnessId='MyHarness-UuFdkQoXSL')
+for version in versions['harnessVersions']:
+    print(version)
+
+endpoints = control_client.list_harness_endpoints(harnessId='MyHarness-UuFdkQoXSL')
+for endpoint in endpoints['endpoints']:
+    print(endpoint)</code></pre></div>
+  <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code>aws bedrock-agentcore-control list-harness-versions --harness-id "$HARNESS_ID"
+aws bedrock-agentcore-control list-harness-endpoints --harness-id "$HARNESS_ID"</code></pre></div>
+  <div class="col"><p>Both paginate through <code>maxResults</code> and <code>nextToken</code>. Use <code>GetHarnessEndpoint</code> for one endpoint's configuration and <code>DeleteHarnessEndpoint</code> to remove it.</p></div>
+
+  <div class="col">
+  <h4>Endpoint lifecycle states</h4>
+  </div>
+  <div class="tw"><table>
+    <thead><tr><th>State</th><th>Meaning</th></tr></thead>
+    <tbody>
+      <tr><td><code>CREATING</code></td><td>Initial state while the endpoint is being created.</td></tr>
+      <tr><td><code>CREATE_FAILED</code></td><td>Creation failed &#x2014; permissions, configuration, or another issue.</td></tr>
+      <tr><td><code>READY</code></td><td>Accepting requests.</td></tr>
+      <tr><td><code>UPDATING</code></td><td>Being updated to a new version.</td></tr>
+      <tr><td><code>UPDATE_FAILED</code></td><td>The update operation failed.</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="ck"><input type="checkbox" id="ck09"><div class="ck-body">
+    <p class="ck-t">Checkpoint 09</p>
+    <p><code>list-harness-versions</code> shows at least three versions. You promoted a named endpoint to the newest one, invoked through it, then rolled it back &#x2014; and confirmed the behaviour changed both times.</p>
+  </div></div>
+</section>
+
+<section id="lab10" data-nav="Security" data-n="10">
+  <div class="lab-head">
+    <div class="lab-n">10</div>
+    <div>
+      <h2>Security and access controls</h2>
+      <p class="lab-sub">~30 min &#xB7; IAM matrix &#xB7; inbound OAuth &#xB7; trust boundary &#xB7; VPC</p>
+    </div>
+  </div>
+  <div class="col">
+  <div class="goal"><p><strong>Goal</strong>Understand precisely where the security boundary sits, then move your harness from IAM auth to OAuth so end-user identity threads through to downstream tools.</p></div>
+
+  <p class="step">Step 1 &#x2014; The permission matrix</p>
+  <p>Every harness API needs permissions on <em>both</em> the harness resource and the underlying Runtime resource. This trips people up constantly: granting <code>InvokeHarness</code> alone is not enough.</p>
+  </div>
+  <div class="tw"><table>
+    <thead><tr><th>API</th><th>Required IAM actions</th></tr></thead>
+    <tbody>
+      <tr><td><code>InvokeHarness</code></td><td><code>bedrock-agentcore:InvokeHarness</code>, <code>bedrock-agentcore:InvokeAgentRuntime</code></td></tr>
+      <tr><td><code>InvokeAgentRuntimeCommand</code></td><td><code>bedrock-agentcore:InvokeAgentRuntimeCommand</code>, <code>bedrock-agentcore:InvokeAgentRuntime</code></td></tr>
+      <tr><td><code>CreateHarness</code></td><td><code>bedrock-agentcore:CreateHarness</code>, <code>CreateAgentRuntime</code>, <code>CreateMemory</code></td></tr>
+      <tr><td><code>UpdateHarness</code></td><td><code>bedrock-agentcore:UpdateHarness</code>, <code>UpdateAgentRuntime</code>, <code>UpdateMemory</code></td></tr>
+      <tr><td><code>DeleteHarness</code></td><td><code>bedrock-agentcore:DeleteHarness</code>, <code>DeleteAgentRuntime</code>, <code>DeleteMemory</code></td></tr>
+      <tr><td><code>GetHarness</code></td><td><code>bedrock-agentcore:GetHarness</code></td></tr>
+      <tr><td><code>ListHarnesses</code></td><td><code>bedrock-agentcore:ListHarnesses</code></td></tr>
+      <tr><td><code>CreateHarnessEndpoint</code></td><td><code>bedrock-agentcore:CreateHarnessEndpoint</code>, <code>CreateAgentRuntimeEndpoint</code></td></tr>
+      <tr><td><code>UpdateHarnessEndpoint</code></td><td><code>bedrock-agentcore:UpdateHarnessEndpoint</code>, <code>UpdateAgentRuntimeEndpoint</code></td></tr>
+      <tr><td><code>DeleteHarnessEndpoint</code></td><td><code>bedrock-agentcore:DeleteHarnessEndpoint</code>, <code>DeleteAgentRuntimeEndpoint</code></td></tr>
+      <tr><td><code>GetHarnessEndpoint</code></td><td><code>bedrock-agentcore:GetHarnessEndpoint</code></td></tr>
+      <tr><td><code>ListHarnessEndpoints</code></td><td><code>bedrock-agentcore:ListHarnessEndpoints</code></td></tr>
+      <tr><td><code>ListHarnessVersions</code></td><td><code>bedrock-agentcore:ListHarnessVersions</code></td></tr>
+    </tbody>
+  </table></div>
+  <div class="col"><p>Most actions scope to the harness ARN &#x2014; <code>arn:aws:bedrock-agentcore:&lt;region&gt;:&lt;accountId&gt;:harness/&lt;id&gt;</code>. Endpoint actions also use the endpoint ARN, <code>&#x2026;:harness/&lt;id&gt;/harness-endpoint/&lt;endpointName&gt;</code>. <code>GetHarnessEndpoint</code>, <code>UpdateHarnessEndpoint</code> and <code>DeleteHarnessEndpoint</code> need both; <code>CreateHarnessEndpoint</code> needs only the harness ARN, since the endpoint does not exist yet. When you invoke a custom endpoint, <code>InvokeHarness</code> and <code>InvokeAgentRuntimeCommand</code> need both.</p>
+
+  <p class="step">Step 2 &#x2014; Know where the boundary is</p>
+  <div class="warn"><b>All <code>InvokeHarness</code> input is trusted</b>
+  <p>Any principal that passes the IAM or JWT gate has access to the full microVM session, including every tool configured on the harness. The harness does not sanitize input, filter content blocks, or enforce behavioural constraints &#x2014; it adds no security layer between the caller and the microVM. This is the same model as Lambda, API Gateway or SQS: authentication is the gate.</p></div>
+
+  <p>The sharpest illustration: pass a <code>toolUse</code> block for a server-side tool with no matching <code>toolResult</code>, and the harness invokes that tool directly with your payload. No model reasoning involved.</p>
+  </div>
+  <div class="code"><div class="code-bar"><span class="code-lang">python &#xB7; direct tool dispatch</span></div><pre><code>response = client.invoke_harness(
+    harnessArn=HARNESS_ARN,
+    runtimeSessionId=SESSION_ID,
+    messages=[{
+      "role": "assistant",
+      "content": [
+        {
+          "toolUse": {
+            "toolUseId": TOOL_USE_ID,
+            "name": "shell",
+            "input": {
+              "command": "pwd",
+            }
+          }
+        }
+      ]
+    }],
+)</code></pre></div>
+  <div class="col"><p>So: if you expose the harness to users you do not fully trust &#x2014; employees, external consumers, third-party integrations &#x2014; validate and sanitize in your application layer before calling <code>InvokeHarness</code>. Strip the content-block types, <code>skills</code> sources and model configuration fields you do not want dispatched.</p>
+
+  <h4>Who is responsible for what</h4>
+  </div>
+  <div class="tw"><table>
+    <thead><tr><th>AWS handles</th><th>You handle</th></tr></thead>
+    <tbody>
+      <tr><td>Infrastructure and microVM isolation at the hardware level</td><td>Agent code security and dependency management</td></tr>
+      <tr><td>OS kernel patching</td><td>IAM access controls and resource policies</td></tr>
+      <tr><td>Language runtime patching for direct code deployments</td><td>Security of commands executed in runtime sessions</td></tr>
+      <tr><td>Network infrastructure security</td><td>Session-to-user mapping enforcement</td></tr>
+      <tr><td>Service availability and resilience</td><td>Input validation and prompt-injection prevention</td></tr>
+      <tr><td></td><td>Model configuration validation &#x2014; <code>additionalParams</code>, <code>apiBase</code>, <code>modelId</code></td></tr>
+      <tr><td></td><td>Trustworthiness of skill and instruction sources</td></tr>
+      <tr><td></td><td>Rebuilding container images on current secure bases</td></tr>
+      <tr><td></td><td>Network configuration &#x2014; security groups, VPC endpoints, route tables</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="col">
+  <p class="step">Step 3 &#x2014; Switch to inbound OAuth</p>
+  <p>A JWT-configured harness requires callers to present a valid token from your identity provider. This is not only an auth upgrade &#x2014; it changes what the agent can do downstream.</p>
+  <div class="warn"><b>Per-user identity requires OAuth, not SigV4</b>
+  <p>When callers authenticate with SigV4, the harness does not propagate per-user identity into downstream tool calls. AgentCore Identity's per-user credential scoping &#x2014; user-scoped OAuth token storage, on-behalf-of token exchange &#x2014; is only available on the Bearer JWT inbound path. If you need downstream tools to act as the end user rather than a shared service account, configure inbound OAuth.</p></div>
+  </div>
+  <div class="tabs">
+    <div class="tabstrip" role="tablist">
+      <button class="on" role="tab" aria-selected="true">AgentCore CLI</button>
+      <button role="tab" aria-selected="false">AWS CLI + curl</button>
+    </div>
+    <div class="tabpanel on">
+      <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code>agentcore add harness --name MyNewHarness \
+  --authorizer-type CUSTOM_JWT \
+  --discovery-url {DISCOVERY_URL} \
+  --allowed-clients {CLIENT_ID}
+agentcore deploy
+
+agentcore invoke --harness MyNewHarness --bearer-token "{token}" "Hello"</code></pre></div>
+    </div>
+    <div class="tabpanel">
+      <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code>aws bedrock-agentcore-control create-harness \
+  --harness-name "OAuthHarness" \
+  --execution-role-arn "$ROLE_ARN" \
+  --authorizer-configuration '{"customJWTAuthorizer": {"discoveryUrl": "https://cognito-idp.us-west-2.amazonaws.com/&lt;POOL_ID&gt;/.well-known/openid-configuration", "allowedClients": ["&lt;CLIENT_ID&gt;"]}}'</code></pre></div>
+      <div class="code"><div class="code-bar"><span class="code-lang">bash &#xB7; invoke with a bearer token instead of SigV4</span></div><pre><code>curl -X POST "https://bedrock-agentcore.us-west-2.amazonaws.com/harnesses/invoke?harnessArn=${HARNESS_ARN}" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer ${ID_TOKEN}" \
+  -H "X-Amzn-Bedrock-AgentCore-Runtime-Session-Id: $(uuidgen)" \
+  -d '{"messages": [{"role": "user", "content": [{"text": "Hi"}]}]}'</code></pre></div>
+    </div>
+  </div>
+
+  <div class="col">
+  <p>If your IdP's OIDC discovery endpoint is only reachable over PrivateLink, add private-endpoint flags. Either a service-managed VPC endpoint:</p>
+  </div>
+  <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code>agentcore add harness --name MyNewHarness \
+  --authorizer-type CUSTOM_JWT \
+  --discovery-url {DISCOVERY_URL} \
+  --allowed-clients {CLIENT_ID} \
+  --private-endpoint-vpc-id vpc-0abc1234def56789a \
+  --private-endpoint-subnets subnet-0abc1234def56789a,subnet-0def5678abc12349b \
+  --private-endpoint-ip-type IPV4 \
+  --private-endpoint-security-groups sg-0abc1234def56789a
+agentcore deploy</code></pre></div>
+  <div class="col"><p>Or an existing VPC Lattice resource configuration: <code>--private-endpoint-lattice-arn rcfg-0abc1234def56789a</code>. These flags are valid only with <code>--authorizer-type CUSTOM_JWT</code>; <code>--private-endpoint-vpc-id</code> and <code>--private-endpoint-lattice-arn</code> are mutually exclusive, and the VPC form requires both <code>--private-endpoint-subnets</code> and <code>--private-endpoint-ip-type</code> (<code>IPV4</code> or <code>IPV6</code>).</p>
+
+  <p class="step">Step 4 &#x2014; Put the harness in a VPC</p>
+  <p>By default harness sessions run on the public network. For private databases and internal APIs, move it into your VPC.</p>
+  </div>
+  <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code>aws bedrock-agentcore-control create-harness \
+  --harness-name "VpcHarness" \
+  --execution-role-arn "$ROLE_ARN" \
+  --environment '{"agentCoreRuntimeEnvironment": {"networkConfiguration": {"networkMode": "VPC", "vpcConfig": {"securityGroupIds": ["sg-0abc1234def56789a"], "subnetIds": ["subnet-0abc1234def56789a"]}}}}'</code></pre></div>
+  <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code>agentcore add harness --name internal-agent \
+  --network-mode VPC \
+  --subnets subnet-0abc1234def56789a \
+  --security-groups sg-0abc1234def56789a
+agentcore deploy</code></pre></div>
+  <div class="col"><p>Remember the NAT gateway requirement from Lab 07 &#x2014; ECR Public has no VPC endpoint, and without egress your sessions will not start.</p>
+
+  <p class="step">Step 5 &#x2014; Layer policy on gateway tools</p>
+  <p>When tools come through AgentCore Gateway, Cedar-based policies gate every call: who may call which tool, under which conditions, with which arguments. This is the one place where you get true per-call authorization rather than a coarse allow/deny on the whole tool.</p>
+
+  <h4>Mitigations worth applying now</h4>
+  <ul>
+    <li>Strip or allowlist the <code>model</code> field on caller-supplied requests; validate or remove <code>additionalParams</code>, <code>apiBase</code> and <code>modelId</code>.</li>
+    <li>Deny <code>sts:AssumeRole</code> on the execution role unless role switching is genuinely required.</li>
+    <li>Strip or ignore the <code>skills</code> field from untrusted requests; allowlist permitted S3 prefixes and Git repositories.</li>
+    <li>Withhold <code>bedrock-agentcore:InvokeAgentRuntimeCommand</code> from principals who should not get a root shell.</li>
+    <li>Scope network access with VPC security groups.</li>
+    <li>Replace the Lab 01 wildcard on <code>BedrockModelInvocation</code> with specific inference profile ARNs.</li>
+  </ul>
+  <div class="tip"><b>On correlation IDs</b>
+  <p>The harness propagates correlation identifiers to Gateway, Memory, Code Interpreter and Browser so CloudWatch can show a unified trace. These are for observability only &#x2014; never for authorization or data access decisions.</p></div>
+  </div>
+
+  <div class="ck"><input type="checkbox" id="ck10"><div class="ck-body">
+    <p class="ck-t">Checkpoint 10</p>
+    <p>You can name the two IAM actions <code>InvokeHarness</code> requires, explain in one sentence why <code>allowedTools</code> is not a defence against <code>InvokeAgentRuntimeCommand</code>, and say which inbound auth method is required for per-user downstream credentials.</p>
+  </div></div>
+</section>
+
+<section id="lab11" data-nav="Export to code" data-n="11">
+  <div class="lab-head">
+    <div class="lab-n">11</div>
+    <div>
+      <h2>Export the harness to code</h2>
+      <p class="lab-sub">~20 min &#xB7; Strands &#xB7; CodeZip &#xB7; the escape hatch</p>
+    </div>
+  </div>
+  <div class="col">
+  <div class="goal"><p><strong>Goal</strong>Turn the declarative harness you have been building into editable Python you own. Export generates the equivalent agent using the Strands framework &#x2014; a normal AgentCore Runtime agent you can modify freely and deploy anywhere.</p></div>
+
+  <p>Export when the configuration model runs out of room, not before. Three legitimate reasons:</p>
+  <ul>
+    <li><b style="display:inline;font-family:var(--mono);font-size:13px;letter-spacing:0;text-transform:none">Customise beyond the config</b> &#x2014; add custom tool logic, change the agent loop, inject middleware or hooks, integrate libraries the harness does not expose.</li>
+    <li><b style="display:inline;font-family:var(--mono);font-size:13px;letter-spacing:0;text-transform:none">Own the code</b> &#x2014; move from declarative config to source you control, review and version alongside the rest of your application.</li>
+    <li><b style="display:inline;font-family:var(--mono);font-size:13px;letter-spacing:0;text-transform:none">Graduate a prototype</b> &#x2014; start fast with a harness, invest in a hand-maintained agent once the shape is settled.</li>
+  </ul>
+  <p>If the configuration already does what you need, keep running it as a harness. Export is a one-way door in practice: you now maintain the loop.</p>
+
+  <h4>What comes across</h4>
+  <p>Framework: Strands (Claude Agent SDK coming). Language: Python only. Build types: CodeZip (default) and Container. The generated agent mirrors the model provider and config including model ID and API key references; remote MCP tools, Gateways, inline function tools, Browser, Code Interpreter and the built-in <code>shell</code> and <code>file_operations</code>; memory; execution limits; conversation truncation; skills from path, S3 and Git; filesystem mounts for VPC harnesses; and authorizer configuration.</p>
+
+  <p class="step">Step 1 &#x2014; Export</p>
+  </div>
+  <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code>agentcore export harness --arn &lt;arn&gt; [options]</code></pre></div>
+  <div class="tw"><table>
+    <thead><tr><th>Flag</th><th>Description</th><th>Default</th></tr></thead>
+    <tbody>
+      <tr><td><code>--arn &lt;arn&gt;</code></td><td>Harness to export, when it was created outside the current CLI project.</td><td><code>arn</code> or <code>name</code> required</td></tr>
+      <tr><td><code>--name &lt;name&gt;</code></td><td>Harness to export, when it lives in this CLI project.</td><td><code>arn</code> or <code>name</code> required</td></tr>
+      <tr><td><code>--target-agent-name</code></td><td>Name for the generated runtime agent.</td><td><code>&lt;harnessName&gt;Agent</code></td></tr>
+      <tr><td><code>--build &lt;type&gt;</code></td><td><code>CodeZip</code> or <code>Container</code>.</td><td><code>CodeZip</code></td></tr>
+      <tr><td><code>--json</code></td><td>Output results as JSON.</td><td>False</td></tr>
+    </tbody>
+  </table></div>
+  <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code># By ARN &#x2014; generates MyHarnessAgent using CodeZip
+agentcore export harness --arn arn:aws:bedrock-agentcore:us-east-1:123456789012:harness/MyHarness
+
+# By project-local name
+agentcore export harness --name MyHarness
+
+# Custom agent name
+agentcore export harness --name MyHarness --target-agent-name MyProductionAgent
+
+# Container build &#x2014; generates a Dockerfile
+agentcore export harness --name MyHarness --build Container</code></pre></div>
+  <div class="col"><p>Run <code>agentcore export harness</code> with no <code>--name</code> to get the interactive wizard: it asks which harness (skipped if there is only one), the generated agent's name, and the build type, then shows a confirmation summary.</p>
+
+  <p class="step">Step 2 &#x2014; Read EXPORT_NOTES.md before deploying</p>
+  <div class="warn"><b>This file is not optional reading</b>
+  <p>Every export writes <code>EXPORT_NOTES.md</code> into the agent directory listing each item that needs manual follow-up, why it needs attention, and exactly what to do about it. Read it before <code>agentcore deploy</code>.</p></div>
+  </div>
+  <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code>cat EXPORT_NOTES.md
+agentcore deploy</code></pre></div>
+  <div class="col"><p>The exported agent is added as an ordinary runtime, so it deploys alongside the rest of your AgentCore CLI project.</p>
+
+  <p class="step">Step 3 &#x2014; Consider where it runs now</p>
+  <p>Once it is code, hosting is your choice. <code>agentcore deploy</code> puts it on AgentCore Runtime with managed infrastructure, scaling and credential provisioning. Or self-host it anywhere Python 3.12+ runs: Lambda, ECS/Fargate, EC2, Kubernetes, on-premise servers, any containerised environment.</p>
+  <p>Compare the generated Python against your <code>harness.json</code> side by side. Everything that was one config line is now explicit construction &#x2014; which is precisely the trade you just made.</p>
+  </div>
+
+  <div class="ck"><input type="checkbox" id="ck11"><div class="ck-body">
+    <p class="ck-t">Checkpoint 11</p>
+    <p>You exported the research agent, read <code>EXPORT_NOTES.md</code>, and can point to at least one thing in the generated code that was a single field in the harness configuration.</p>
+  </div></div>
+</section>
+
+<section id="lab12" data-nav="Choose &amp; clean up" data-n="12">
+  <div class="lab-head">
+    <div class="lab-n">12</div>
+    <div>
+      <h2>Harness or Runtime &#x2014; and cleaning up</h2>
+      <p class="lab-sub">~15 min &#xB7; decision framework &#xB7; resource teardown</p>
+    </div>
+  </div>
+  <div class="col">
+  <div class="goal"><p><strong>Goal</strong>Decide correctly for your next project, then delete everything this lab created.</p></div>
+
+  <p><b style="display:inline;font-family:var(--mono);font-size:13px;letter-spacing:0;text-transform:none">AgentCore Runtime</b> is a serverless hosting environment. You bring agent code in any framework or none, wrap it with the SDK's <code>BedrockAgentCoreApp</code> entrypoint, package it into an ARM64 container, push to ECR and deploy. <em>The orchestration loop is yours.</em> Every other AgentCore primitive &#x2014; Memory, Gateway, Browser, Code Interpreter, outbound Identity &#x2014; you call from your code.</p>
+  <p><b style="display:inline;font-family:var(--mono);font-size:13px;letter-spacing:0;text-transform:none">AgentCore harness</b> provides the loop, powered by Strands Agents. You declare what the agent is; AWS runs it. It is a managed abstraction that runs <em>inside</em> Runtime &#x2014; which is why CloudTrail files it under <code>AWS::BedrockAgentCore::Runtime</code>.</p>
+
+  <h4>Where they genuinely differ</h4>
+  <p>Nearly every capability exists on both sides; the difference is whether you write code for it. The rows below are the ones that should actually decide your choice &#x2014; everything the harness marks &#x2705; is available on Runtime too, but only as code you maintain.</p>
+  </div>
+  <div class="tw"><table>
+    <thead><tr><th>Capability</th><th>Harness</th><th>Runtime</th></tr></thead>
+    <tbody>
+      <tr><td>Choice of agent framework</td><td>&#x274C; Strands only</td><td>&#x1F535; Any &#x2014; your code</td></tr>
+      <tr><td>Bidirectional streaming</td><td>&#x274C;</td><td>&#x1F535; Your code</td></tr>
+      <tr><td>Non-agent-loop patterns (graph, workflow)</td><td>&#x274C;</td><td>&#x1F535; Your code</td></tr>
+      <tr><td>Hooks</td><td>&#x274C;</td><td>&#x1F535; Your code</td></tr>
+      <tr><td>Inline / client-side tools</td><td>&#x1F535; Yes, you write the handler</td><td>&#x1F535; Your code</td></tr>
+      <tr><td>Custom container image</td><td>&#x1F7E3; Config enables it, code may be needed</td><td>&#x1F7E3; Same</td></tr>
+      <tr><td>Model switching mid-session</td><td>&#x2705; No code</td><td>&#x1F535; Your code</td></tr>
+      <tr><td>Skills, memory, tools, limits, truncation</td><td>&#x2705; No code</td><td>&#x1F535; Your code</td></tr>
+      <tr><td>Streaming responses</td><td>&#x2705; No code</td><td>&#x1F535; Your code</td></tr>
+      <tr><td>Outbound auth / Identity token vault</td><td>&#x2705; No code</td><td>&#x1F535; Your code</td></tr>
+      <tr><td>Filesystem, env vars, VPC, inbound auth, versioning, exec API</td><td>&#x2705; No code</td><td>&#x2705; No code</td></tr>
+    </tbody>
+  </table></div>
+  <div class="col"><p>Legend: &#x2705; supported with no custom code &#xB7; &#x1F535; supported, you maintain the implementation &#xB7; &#x1F7E3; configuration enables it but code is required to fully use it &#xB7; &#x274C; not supported.</p>
+  <p>Read it as a single question: <em>do you need to own the loop?</em> If you need a framework other than Strands, bidirectional streaming, a graph or workflow topology rather than an agent loop, or lifecycle hooks &#x2014; use Runtime. Otherwise the harness gives you the same capabilities without the code to maintain, and Lab 11 is your exit if that changes.</p>
+
+  <p class="step">Clean up</p>
+  <p>What follows tears down one pass of this lab. If you intend to <em>run the lab again</em>, use <a href="#rerun">Reset &amp; rerun</a> instead &#x2014; it is idempotent, scoped so it cannot touch unrelated resources, and covers the account-level setup (model agreement, Transaction Search, CDK bootstrap) that this section leaves in place.</p>
+  <div class="warn"><b>Deleting a harness cascade-deletes its managed memory</b>
+  <p>By default <code>DeleteHarness</code> also deletes the memory it provisioned, and with it every stored conversation. Pass <code>deleteManagedMemory=false</code> if you want to keep the memory as a standalone resource instead.</p></div>
+  </div>
+  <div class="tabs">
+    <div class="tabstrip" role="tablist">
+      <button class="on" role="tab" aria-selected="true">AgentCore CLI</button>
+      <button role="tab" aria-selected="false">AWS CLI</button>
+    </div>
+    <div class="tabpanel on">
+      <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code># The CLI manages a CloudFormation stack &#x2014; tear it down.
+# There is no `agentcore destroy`; delete the stack directly.
+aws cloudformation delete-stack \
+  --region "$AWS_REGION" \
+  --stack-name "AgentCore-&lt;project-name&gt;-default"
+
+aws cloudformation wait stack-delete-complete \
+  --region "$AWS_REGION" \
+  --stack-name "AgentCore-&lt;project-name&gt;-default"
+
+# Confirm: both should come back empty
+aws bedrock-agentcore-control list-agent-runtimes \
+  --region "$AWS_REGION" --query 'agentRuntimes[].agentRuntimeName' --output text</code></pre></div>
+      <div class="col"><p>The stack owns the harness, its runtime and the execution role the CLI generated (<code>&lt;project&gt;_&lt;harness&gt;</code>) &#x2014; deleting it removes all three. Two things it does <em>not</em> remove: the runtime's CloudWatch log group under <code>/aws/bedrock-agentcore/runtimes/</code>, and the CDK bootstrap stack <code>CDKToolkit</code> that the first <code>agentcore deploy</code> created implicitly. Leave <code>CDKToolkit</code> in place unless you want a bare account; if you do delete it, empty its versioned asset bucket (<code>cdk-hnb659fds-assets-&lt;account&gt;-&lt;region&gt;</code>, including delete markers) and force-delete its ECR repo first, or the stack deletion fails.</p></div>
+    </div>
+    <div class="tabpanel">
+      <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code># 1. Endpoints first
+for EP in $(aws bedrock-agentcore-control list-harness-endpoints \
+              --harness-id "$HARNESS_ID" \
+              --query 'endpoints[?name!=`DEFAULT`].name' --output text); do
+  aws bedrock-agentcore-control delete-harness-endpoint \
+    --harness-id "$HARNESS_ID" --endpoint-name "$EP"
+done
+
+# 2. Each harness you created
+aws bedrock-agentcore-control delete-harness --harness-id "$HARNESS_ID"
+
+# 3. Credential providers
+aws bedrock-agentcore-control delete-api-key-credential-provider --name my-openai-key
+
+# 4. Lab bucket
+aws s3 rb "s3://${SKILL_BUCKET}" --force
+
+# 5. IAM role
+aws iam delete-role-policy --role-name "$ROLE_NAME" --policy-name HarnessBaseline
+aws iam delete-role --role-name "$ROLE_NAME"
+
+# 6. Runtime log groups (not removed with the harness)
+aws logs delete-log-group \
+  --log-group-name "/aws/bedrock-agentcore/runtimes/&lt;runtime-id&gt;-DEFAULT"
+
+# 7. Model agreement &#x2014; only if you want to undo Lab 01 Step 5.
+#    Leave it if you plan to use the model again; it costs nothing idle.
+aws bedrock delete-foundation-model-agreement --model-id "$MODEL_ID"
+
+# 8. Transaction Search, to undo Lab 01 Step 4 (account-level setting)
+aws xray update-trace-segment-destination --destination XRay</code></pre></div>
+      <div class="col"><p>List anything you may have forgotten with <code>aws bedrock-agentcore-control list-harnesses</code>. Also check for gateways, custom browsers or code interpreters, EFS/S3 Files access points, and any ECR repositories created in Lab 07.</p></div>
+    </div>
+  </div>
+
+  <div class="ck"><input type="checkbox" id="ck12"><div class="ck-body">
+    <p class="ck-t">Checkpoint 12</p>
+    <p><code>list-harnesses</code> returns empty, the lab bucket and IAM role are gone, and you can state in one sentence when you would choose Runtime over the harness.</p>
+  </div></div>
+</section>
+
+<section id="rerun" data-nav="Reset &amp; rerun" data-n="&#x21BA;">
+  <div class="lab-head">
+    <div class="lab-n">&#x21BA;</div>
+    <div>
+      <h2>Reset the account and run the lab again</h2>
+      <p class="lab-sub">~10 min &#xB7; idempotent teardown &#xB7; safe to run at any point</p>
+    </div>
+  </div>
+  <div class="col">
+  <div class="goal"><p><strong>Goal</strong>Return the account to its pre-Lab-01 state so the whole lab &#x2014; or any prefix of it &#x2014; can be run again from a clean slate. Lab 12's cleanup is the <em>end</em> of a single pass; this section is the one you come back to. Every command here is safe to run when the resource is already absent, so you can run the block top to bottom without checking first.</p></div>
+
+  <p>Decide how far back you want to go. The full reset exercises Lab 01 Step 5 and the CDK bootstrap again, at the cost of a few extra minutes on the next pass.</p>
+  </div>
+
+  <div class="tw"><table>
+    <thead><tr><th>Reset</th><th>Removes</th><th>Cost on the next pass</th></tr></thead>
+    <tbody>
+      <tr><td><b style="display:inline;text-transform:none;letter-spacing:0;font-size:inherit;font-family:inherit">Fast</b> &#x2014; steps 1&#x2013;4</td><td>Harness, runtime, roles, log groups, local project</td><td>None. Model access and CDK bootstrap are still in place.</td></tr>
+      <tr><td><b style="display:inline;text-transform:none;letter-spacing:0;font-size:inherit;font-family:inherit">Full</b> &#x2014; steps 1&#x2013;6</td><td>Also the model agreement, Transaction Search and CDK bootstrap</td><td>~3 min for the agreement to propagate, plus a slower first <code>agentcore deploy</code> while CDK re-bootstraps.</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="col">
+  <p class="step">Step 0 &#x2014; Re-establish your shell</p>
+  <p>You are likely in a new terminal since the last pass. These are the same variables from Lab 01, plus the project name you gave <code>agentcore create</code>.</p>
+  </div>
+  <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code>export AWS_REGION=us-west-2
+export AWS_DEFAULT_REGION=us-west-2
+export ACCOUNT_ID="$(aws sts get-caller-identity --query Account --output text)"
+export ROLE_NAME=AgentCoreHarnessLabRole
+export PROJECT=researchagent
+export MODEL_ID=anthropic.claude-sonnet-4-6
+export LAB_DIR="$HOME/PycharmProjects/aws_agent_harness"   # adjust to taste</code></pre></div>
+
+  <div class="col">
+  <p class="step">Step 1 &#x2014; See what is actually there</p>
+  <p>Always look before deleting. This is also the fastest way to spot resources a partial pass left behind.</p>
+  </div>
+  <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code>aws cloudformation list-stacks \
+  --stack-status-filter CREATE_COMPLETE UPDATE_COMPLETE ROLLBACK_COMPLETE \
+  --query 'StackSummaries[].StackName' --output text
+
+aws bedrock-agentcore-control list-agent-runtimes \
+  --query 'agentRuntimes[].agentRuntimeName' --output text
+
+aws iam list-roles \
+  --query "Roles[?contains(RoleName,'${PROJECT}')||RoleName=='${ROLE_NAME}'].RoleName" \
+  --output text</code></pre></div>
+
+  <div class="col">
+  <p class="step">Step 2 &#x2014; Delete the CloudFormation stack</p>
+  <p>The stack created by <code>agentcore deploy</code> owns the harness, its runtime, and the execution role the CLI generated (<code>&lt;project&gt;_&lt;harness&gt;</code>). Deleting the stack removes all three &#x2014; do not delete them individually first, or the stack deletion will fail on resources that no longer exist.</p>
+  </div>
+  <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code>STACK="AgentCore-${PROJECT}-default"
+
+aws cloudformation delete-stack --stack-name "$STACK"
+aws cloudformation wait stack-delete-complete --stack-name "$STACK"
+
+# Should be empty
+aws bedrock-agentcore-control list-agent-runtimes \
+  --query 'agentRuntimes[].agentRuntimeName' --output text</code></pre></div>
+
+  <div class="col">
+  <div class="warn"><b>There is no <code>agentcore destroy</code></b>
+  <p>The CLI (0.24.x) has no teardown verb &#x2014; <code>agentcore --help</code> lists <code>deploy</code> but nothing that reverses it. Delete the stack directly, as above. <code>agentcore remove</code> is unrelated: it edits <code>agentcore.json</code> and touches nothing in AWS.</p></div>
+
+  <p class="step">Step 3 &#x2014; Delete the Lab 01 role and the log groups</p>
+  <p>An IAM role cannot be deleted while it holds policies. The log groups outlive the runtime that wrote them, and a stale one will not block a rerun &#x2014; but it will leave you reading last pass's traces in Lab 08.</p>
+  </div>
+  <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code># Inline policies first, then the role
+aws iam delete-role-policy \
+  --role-name "$ROLE_NAME" --policy-name HarnessBaseline 2&gt;/dev/null
+aws iam delete-role --role-name "$ROLE_NAME" 2&gt;/dev/null
+
+# Log groups, scoped by project prefix so nothing unrelated is caught
+for LG in $(aws logs describe-log-groups \
+    --log-group-name-prefix "/aws/bedrock-agentcore/runtimes/harness_${PROJECT}_" \
+    --query 'logGroups[].logGroupName' --output text); do
+  echo "deleting $LG"
+  aws logs delete-log-group --log-group-name "$LG"
+done</code></pre></div>
+
+  <div class="col">
+  <div class="warn"><b>Never delete log groups by wildcard</b>
+  <p>The prefix above is deliberately narrow. <code>/aws/bedrock-agentcore/runtimes/</code> is shared by <em>every</em> agent runtime in the account, including ones this lab did not create. Filtering on <code>harness_${PROJECT}_</code> keeps the blast radius to this project. Read the <code>echo</code> output before you trust the loop.</p></div>
+
+  <p class="step">Step 4 &#x2014; Remove the local project</p>
+  <p><code>agentcore create</code> will not scaffold over an existing directory, so this is required for a clean rerun. Check for your own work first &#x2014; the scaffold's own commit is titled <code>Initial commit</code> and the project has no remote.</p>
+  </div>
+  <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code>cd "$LAB_DIR"                      # NOT inside $PROJECT &#x2014; see below
+git -C "$PROJECT" log --oneline    # anything of yours in here?
+
+rm -rf "$PROJECT" trust-policy.json harness-policy.json</code></pre></div>
+
+  <div class="col">
+  <div class="warn"><b>Leave the project directory before deleting it</b>
+  <p>The <code>cd "$LAB_DIR"</code> above is load-bearing. Deleting the directory your shell is sitting in leaves it with a working directory that no longer exists, and every subsequent Node-based command dies before it starts:</p>
+  <p><code>Error: ENOENT: no such file or directory, uv_cwd &#x2014; at process.wrappedCwd</code></p>
+  <p>It looks like a broken <code>npm</code> or a corrupted Node install; it is neither. <code>cd</code> anywhere that exists and it clears immediately. Python and the AWS CLI fail the same way with a less recognisable message.</p></div>
+  </div>
+
+  <div class="col"><p><b style="display:inline;text-transform:none;letter-spacing:0;font-size:inherit;font-family:inherit">Stop here for a fast reset.</b> Everything below undoes account-level setup that costs nothing to keep and takes minutes to recreate. Continue only if you want Lab 01 Steps 4&#x2013;5 to run against a genuinely fresh account.</p>
+
+  <p class="step">Step 5 &#x2014; Undo model access and Transaction Search</p>
+  <p>Deleting the agreement puts <code>agreementAvailability</code> back to <code>NOT_AVAILABLE</code>, which is what makes Lab 01 Step 5 meaningful on the next pass rather than a no-op.</p>
+  </div>
+  <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code>aws bedrock delete-foundation-model-agreement --model-id "$MODEL_ID"
+
+# Confirm &#x2014; expect NOT_AVAILABLE
+aws bedrock get-foundation-model-availability \
+  --model-id "$MODEL_ID" --query 'agreementAvailability.status' --output text
+
+# Transaction Search back to the default destination (undoes Lab 01 Step 4)
+aws xray update-trace-segment-destination --destination XRay</code></pre></div>
+
+  <div class="col">
+  <div class="note"><b>Why bother resetting Transaction Search</b>
+  <p>Leaving it enabled makes Lab 01 Step 4 fail with <code>InvalidRequestException: The destination is already set to CloudWatchLogs</code>. Harmless, but it reads like a real error mid-run. Note this is an <em>account-level</em> setting: if other agents in this account rely on trace indexing, leave it alone and expect that message instead.</p></div>
+
+  <p class="step">Step 6 &#x2014; Remove the CDK bootstrap</p>
+  <p>The first <code>agentcore deploy</code> bootstraps CDK implicitly, creating the <code>CDKToolkit</code> stack, a versioned S3 asset bucket and an ECR repository. No lab step creates these and keeping them is free, so this step is genuinely optional. The ordering matters &#x2014; the stack will not delete while the bucket has contents.</p>
+  </div>
+  <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code>BUCKET="cdk-hnb659fds-assets-${ACCOUNT_ID}-${AWS_REGION}"
+
+# 1. Current objects
+aws s3 rm "s3://${BUCKET}" --recursive
+
+# 2. Versions AND delete markers &#x2014; the bucket is versioned, so step 1
+#    leaves both behind and the bucket is still not empty
+while :; do
+  aws s3api list-object-versions --bucket "$BUCKET" --max-keys 500 \
+    --query '{Objects: [Versions, DeleteMarkers][][].{Key:Key,VersionId:VersionId}}' \
+    --output json &gt; /tmp/cdk-purge.json
+  COUNT=$(python3 -c 'import json,sys; print(len(json.load(open("/tmp/cdk-purge.json")).get("Objects") or []))')
+  echo "remaining: $COUNT"
+  [ "$COUNT" = "0" ] &amp;&amp; break
+  aws s3api delete-objects --bucket "$BUCKET" --delete file:///tmp/cdk-purge.json &gt;/dev/null
+done
+
+# 3. ECR repository, images and all
+aws ecr delete-repository --force \
+  --repository-name "cdk-hnb659fds-container-assets-${ACCOUNT_ID}-${AWS_REGION}"
+
+# 4. The stack
+aws cloudformation delete-stack --stack-name CDKToolkit
+aws cloudformation wait stack-delete-complete --stack-name CDKToolkit
+
+# 5. The bucket survives the stack &#x2014; its deletion policy is RETAIN
+aws s3api delete-bucket --bucket "$BUCKET"</code></pre></div>
+
+  <div class="col">
+  <div class="warn"><b>Two traps in step 6</b>
+  <p><code>aws s3 rm --recursive</code> does <em>not</em> empty a versioned bucket &#x2014; it writes delete markers over the current versions and leaves every prior version in place. Skipping the purge loop gives you a <code>BucketNotEmpty</code> failure several minutes into the stack deletion. And the bucket carries a <code>RETAIN</code> deletion policy, so it outlives <code>CDKToolkit</code>; without the final <code>delete-bucket</code> it lingers, and a later re-bootstrap in the same region will adopt it.</p></div>
+
+  <p class="step">Verify</p>
+  <p>Run this after either reset. A fast reset leaves the agreement <code>AVAILABLE</code> and <code>CDKToolkit</code> listed; a full reset returns empty for everything except the service-linked role.</p>
+  </div>
+  <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code>echo "stacks:    $(aws cloudformation list-stacks \
+  --stack-status-filter CREATE_COMPLETE UPDATE_COMPLETE \
+  --query 'StackSummaries[].StackName' --output text)"
+echo "runtimes:  $(aws bedrock-agentcore-control list-agent-runtimes \
+  --query 'agentRuntimes[].agentRuntimeName' --output text)"
+echo "roles:     $(aws iam list-roles \
+  --query "Roles[?contains(RoleName,'${PROJECT}')||RoleName=='${ROLE_NAME}'].RoleName" --output text)"
+echo "agreement: $(aws bedrock get-foundation-model-availability \
+  --model-id "$MODEL_ID" --query 'agreementAvailability.status' --output text)"
+echo "logs:      $(aws logs describe-log-groups \
+  --log-group-name-prefix "/aws/bedrock-agentcore/runtimes/harness_${PROJECT}_" \
+  --query 'logGroups[].logGroupName' --output text)"
+echo "buckets:   $(aws s3api list-buckets \
+  --query 'Buckets[?contains(Name,`cdk-hnb659fds`)].Name' --output text)"</code></pre></div>
+
+  <div class="col">
+  <div class="note"><b>What is left behind on purpose</b>
+  <p><code>AWSServiceRoleForBedrockAgentCoreRuntimeIdentity</code> is an AWS service-linked role. It is recreated automatically the first time you deploy, so deleting it accomplishes nothing. Any log group not matching your project prefix belongs to other work in this account and is not the lab's to remove.</p></div>
+
+  <div class="note"><b>You are reset when</b>
+  <p>The verify block reports empty <code>stacks</code>, <code>runtimes</code>, <code>roles</code> and <code>logs</code>, and <code>$LAB_DIR</code> no longer contains the project directory. If you ran the full reset, <code>agreement</code> reads <code>NOT_AVAILABLE</code> and <code>buckets</code> is empty. Clear your ticks with <b style="display:inline;text-transform:none;letter-spacing:0;font-size:inherit;font-family:inherit">Reset progress</b> at the top of the page, then start again at Lab 01 Step 1.</p></div>
+  </div>
+</section>
+
+<section id="ref" data-nav="Reference" data-n="&#xA7;">
+  <div class="lab-head">
+    <div class="lab-n">&#xA7;</div>
+    <div>
+      <h2>Reference</h2>
+      <p class="lab-sub">API surface &#xB7; defaults &#xB7; things worth memorising</p>
+    </div>
+  </div>
+  <div class="col">
+  <h4>API surface</h4>
+  <p>Control plane on <code>bedrock-agentcore-control</code>; data plane on <code>bedrock-agentcore</code>.</p>
+  </div>
+  <div class="tw"><table>
+    <thead><tr><th>Plane</th><th>Operations</th></tr></thead>
+    <tbody>
+      <tr><td>Control &#x2014; harness</td><td><code>CreateHarness</code> &#xB7; <code>GetHarness</code> &#xB7; <code>UpdateHarness</code> &#xB7; <code>DeleteHarness</code> &#xB7; <code>ListHarnesses</code> &#xB7; <code>ListHarnessVersions</code></td></tr>
+      <tr><td>Control &#x2014; endpoints</td><td><code>CreateHarnessEndpoint</code> &#xB7; <code>GetHarnessEndpoint</code> &#xB7; <code>UpdateHarnessEndpoint</code> &#xB7; <code>DeleteHarnessEndpoint</code> &#xB7; <code>ListHarnessEndpoints</code></td></tr>
+      <tr><td>Data</td><td><code>InvokeHarness</code> &#xB7; <code>InvokeAgentRuntimeCommand</code></td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="col"><h4>Defaults worth remembering</h4></div>
+  <div class="tw"><table>
+    <thead><tr><th>Thing</th><th>Default</th></tr></thead>
+    <tbody>
+      <tr><td>Model</td><td>Claude Sonnet 4.6 on Bedrock (<code>global.anthropic.claude-sonnet-4-6</code>)</td></tr>
+      <tr><td>Model API format</td><td><code>converse_stream</code> (Bedrock) &#xB7; <code>responses</code> (OpenAI)</td></tr>
+      <tr><td>Memory</td><td>Provisioned automatically: <code>SEMANTIC</code> + <code>SUMMARIZATION</code>, 30-day event expiry</td></tr>
+      <tr><td>Memory retrieval</td><td><code>topK=10</code>, <code>relevanceScore=0.2</code>, derived per active strategy</td></tr>
+      <tr><td>Truncation</td><td><code>sliding_window</code></td></tr>
+      <tr><td>Tools present</td><td><code>shell</code> and <code>file_operations</code>, unless restricted by <code>allowedTools</code></td></tr>
+      <tr><td>Network</td><td>Public. VPC is opt-in.</td></tr>
+      <tr><td><code>maxIterations</code> / <code>timeoutSeconds</code></td><td>75 / 3600 s</td></tr>
+      <tr><td><code>idleRuntimeSessionTimeout</code> / <code>maxLifetime</code></td><td>900 s / 28800 s</td></tr>
+      <tr><td>Gateway outbound auth</td><td>SigV4 (AWS IAM)</td></tr>
+      <tr><td>Git skill username</td><td><code>oauth2</code></td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="col"><h4>Hard constraints</h4>
+  <ul>
+    <li><code>runtimeSessionId</code> must be at least 33 characters.</li>
+    <li>Container images must be <code>linux/arm64</code>; the harness overrides <code>ENTRYPOINT</code> and <code>CMD</code>.</li>
+    <li>Filesystem mount paths must be under <code>/mnt</code>. Up to 2 EFS and 2 S3 Files mounts.</li>
+    <li><code>UpdateHarness</code> replaces <code>filesystemConfigurations</code> wholesale &#x2014; read first, then send the full list.</li>
+    <li>Git skill clones must finish in 60 s; each S3 skill must be &#x2264; 1 GB.</li>
+    <li>AWS skill paths must be relative &#x2014; no leading <code>/</code>, no <code>..</code>.</li>
+    <li>VPC mode requires a NAT gateway for <code>public.ecr.aws</code>; ECR Public has no VPC endpoint.</li>
+    <li>Web Search connector: <code>us-east-1</code> only.</li>
+    <li>Guardrails require the <code>converse_stream</code> API format.</li>
+  </ul>
+
+  <h4>Source pages</h4>
+  <p>Every command and policy in this lab comes from the AgentCore developer guide harness chapters: <a href="https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/harness.html">overview</a>, <a href="https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/harness-get-started.html">get started</a>, <a href="https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/harness-models.html">models</a>, <a href="https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/harness-tools.html">tools</a>, <a href="https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/harness-skills.html">skills</a>, <a href="https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/harness-memory.html">memory</a>, <a href="https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/harness-environment.html">environment</a>, <a href="https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/harness-operations.html">operations</a>, <a href="https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/harness-versioning.html">versioning</a>, <a href="https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/harness-export.html">export</a>, <a href="https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/harness-security.html">security</a>, <a href="https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/harness-vs-runtime.html">harness vs. Runtime</a>.</p>
+  </div>
+</section>
+
+
+</div>
+<div class="wrap"><div class="end">
+<p>Built from the Amazon Bedrock AgentCore developer guide, harness chapters. Verify command syntax against the <a href="https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/harness.html">current documentation</a> before using any of this in production.</p>
+</div></div>
+</main>
+</div>
+
+<script>
+(function(){
+  /* ---- copy buttons ---- */
+  document.querySelectorAll('.code').forEach(function(box){
+    var bar=box.querySelector('.code-bar');
+    if(!bar) return;
+    var b=document.createElement('button');
+    b.className='copy'; b.type='button'; b.textContent='Copy';
+    b.addEventListener('click',function(){
+      var t=box.querySelector('pre').innerText;
+      navigator.clipboard.writeText(t).then(function(){
+        b.textContent='Copied'; b.classList.add('done');
+        setTimeout(function(){b.textContent='Copy'; b.classList.remove('done');},1400);
+      });
+    });
+    bar.appendChild(b);
+  });
+
+  /* ---- tabs ---- */
+  document.querySelectorAll('.tabs').forEach(function(t){
+    var btns=t.querySelectorAll('.tabstrip button'), pans=t.querySelectorAll('.tabpanel');
+    btns.forEach(function(b,i){
+      b.addEventListener('click',function(){
+        btns.forEach(function(x){x.classList.remove('on');x.setAttribute('aria-selected','false');});
+        pans.forEach(function(x){x.classList.remove('on');});
+        b.classList.add('on'); b.setAttribute('aria-selected','true');
+        if(pans[i]) pans[i].classList.add('on');
+      });
+    });
+  });
+
+  /* ---- nav build ---- */
+  var nav=document.getElementById('nav');
+  var secs=[].slice.call(document.querySelectorAll('section[data-nav]'));
+  secs.forEach(function(s){
+    var li=document.createElement('li');
+    var a=document.createElement('a');
+    a.href='#'+s.id;
+    a.innerHTML='<span class="n">'+(s.dataset.n||'')+'</span><span class="t">'+s.dataset.nav+'</span>';
+    a.dataset.for=s.id;
+    li.appendChild(a); nav.appendChild(li);
+  });
+
+  /* ---- progress ---- */
+  var KEY='agentcore-harness-lab-v1';
+  var boxes=[].slice.call(document.querySelectorAll('.ck input'));
+  var state={};
+  try{state=JSON.parse(localStorage.getItem(KEY)||'{}');}catch(e){state={};}
+
+  function paint(){
+    var done=0;
+    boxes.forEach(function(b){ if(b.checked) done++; });
+    var pct=boxes.length?Math.round(done/boxes.length*100):0;
+    document.getElementById('mfill').style.width=pct+'%';
+    document.getElementById('mtxt').textContent=done+' / '+boxes.length;
+    secs.forEach(function(s){
+      var inside=[].slice.call(s.querySelectorAll('.ck input'));
+      var a=nav.querySelector('a[data-for="'+s.id+'"]');
+      if(!a) return;
+      a.classList.toggle('done', inside.length>0 && inside.every(function(x){return x.checked;}));
+    });
+  }
+  boxes.forEach(function(b){
+    if(state[b.id]) b.checked=true;
+    b.addEventListener('change',function(){
+      state[b.id]=b.checked;
+      try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}
+      paint();
+    });
+  });
+  paint();
+  document.getElementById('reset').addEventListener('click',function(){
+    boxes.forEach(function(b){b.checked=false;});
+    state={}; try{localStorage.removeItem(KEY);}catch(e){}
+    paint();
+  });
+
+  /* ---- scrollspy ---- */
+  var links=[].slice.call(nav.querySelectorAll('a'));
+  var obs=new IntersectionObserver(function(es){
+    es.forEach(function(e){
+      if(e.isIntersecting){
+        links.forEach(function(l){l.classList.toggle('on', l.dataset.for===e.target.id);});
+      }
+    });
+  },{rootMargin:'-10% 0px -80% 0px'});
+  secs.forEach(function(s){obs.observe(s);});
+})();
+</script>
