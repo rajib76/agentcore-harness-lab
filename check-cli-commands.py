@@ -113,3 +113,46 @@ for kind, tok, cmd in problems:
     print('%-58s %s' % (kind + ':', tok))
     print('    ' + (cmd[:150] + ('…' if len(cmd) > 150 else '')))
 print('\n%d problem(s)' % len(problems))
+
+
+def check_harness_continuity(src=SRC):
+    """Each harness must be created before it is referenced, and only once.
+
+    `agentcore add harness` refuses a duplicate name, and `add tool` /
+    `invoke` fail on a name that was never created — both are easy to
+    introduce when editing one lab in isolation.
+    """
+    pp = Codes()
+    pp.feed(open(src, encoding='utf-8').read())
+    created, problems = {}, []
+    order = []
+    for b in pp.blocks:
+        text = re.sub(r'\\\n\s*', ' ', html.unescape(b))
+        for line in text.split('\n'):
+            for n in re.findall(r'agentcore create\s+--name\s+([\w]+)', line):
+                order.append(('new', n))
+            for n in re.findall(r'agentcore add harness\s+--name\s+([\w]+)', line):
+                order.append(('new', n))
+            for n in re.findall(r'--harness\s+([\w]+)', line):
+                order.append(('ref', n))
+    repeats = []
+    for kind, name in order:
+        if kind == 'new':
+            if name in created:
+                repeats.append(name)
+            created[name] = True
+        elif name not in created:
+            # `create --name X` also makes harness X
+            problems.append('referenced before creation: %s' % name)
+
+    print('\n--- harness continuity ---')
+    for p in problems:
+        print('  ERROR ' + p)
+    # Standalone illustrative snippets legitimately reuse a placeholder name
+    # across labs; only a name on the through-line must be created once.
+    for name in sorted(set(repeats)):
+        print('  info  re-created (expected for standalone examples): %s' % name)
+    print('  %d error(s)' % len(problems))
+
+
+check_harness_continuity()

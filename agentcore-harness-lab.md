@@ -589,12 +589,14 @@ On `openAiModelConfig` the field behaves ordinarily: it picks the protocol only 
 
 ```bash
 # Bedrock model through the OpenAI-compatible Responses API
-agentcore add harness --name research_agent \
+agentcore add harness --name responses_agent \
   --model-provider bedrock \
   --model-id us.anthropic.claude-sonnet-4-5-20250929-v1:0 \
   --api-format responses
 agentcore deploy
 ```
+
+A *new* harness, because `add harness` refuses a name that already exists. To put `research_agent` itself on the Responses format instead, set `"apiFormat": "responses"` inside `model` in `app/research_agent/harness.json` and redeploy.
 
 ### Step 4 — Store a third-party API key
 
@@ -702,13 +704,13 @@ response = client.invoke_harness(
 SESSION_ID="$(uuidgen)"
 
 # Turn 1: Bedrock, harness default API format
-agentcore invoke --harness my_agent \
+agentcore invoke --harness research_agent \
   --model-id us.anthropic.claude-sonnet-4-5-20250929-v1:0 \
   --session-id "$SESSION_ID" \
   "Analyze this codebase and identify performance bottlenecks."
 
 # Turn 2: OpenAI direct, same session
-agentcore invoke --harness my_agent \
+agentcore invoke --harness research_agent \
   --model-provider open_ai \
   --model-id gpt-5.4 \
   --api-key-arn "$KEY_ARN" \
@@ -887,7 +889,7 @@ tools = [
 *the unauthenticated case, on the CLI*
 
 ```bash
-agentcore add tool --harness my_agent --type remote_mcp \
+agentcore add tool --harness research_agent --type remote_mcp \
   --name exa --url https://mcp.exa.ai/mcp
 
 agentcore deploy
@@ -942,12 +944,12 @@ A gateway is a governed tool surface: reference one ARN and every tool configure
 
 ```bash
 # By ARN
-agentcore add tool --harness my_agent --type agentcore_gateway \
+agentcore add tool --harness research_agent --type agentcore_gateway \
   --name my-gateway \
   --gateway-arn arn:aws:bedrock-agentcore:us-west-2:123456789012:gateway/my-gateway
 
 # Or by project-local name
-agentcore add tool --harness my_agent --type agentcore_gateway \
+agentcore add tool --harness research_agent --type agentcore_gateway \
   --name my-gateway --gateway my-gateway
 ```
 
@@ -1091,13 +1093,13 @@ client.invoke_harness(
 On the CLI, declare the tool then fill in its schema in `harness.json`:
 
 ```bash
-agentcore add tool --harness my_agent --type inline_function \
+agentcore add tool --harness research_agent --type inline_function \
   --name approve_purchase \
   --description "Request human approval for a purchase" \
   --input-schema '{"type":"object","properties":{"item":{"type":"string"},"amount":{"type":"number"}},"required":["item","amount"]}'
 agentcore deploy
 
-agentcore invoke --harness my_agent \
+agentcore invoke --harness research_agent \
   "Find a mechanical keyboard under \$200 and request approval."
 ```
 
@@ -1215,13 +1217,13 @@ Paths must be relative — no leading `/`, no `..`. A glob that matches nothing 
 
 ```bash
 # Public repo, single skill from a subdirectory
-agentcore add skill --harness my_harness \
+agentcore add skill --harness research_agent \
   --git https://github.com/anthropics/skills \
   --git-path skills/docx
 agentcore deploy
 
 # Private repo — --credential names an API key credential holding a PAT
-agentcore add skill --harness my_harness \
+agentcore add skill --harness research_agent \
   --git https://github.com/my-org/internal-skills \
   --git-path excel \
   --credential my-github-pat
@@ -1295,7 +1297,7 @@ response = client.invoke_harness(
 ```
 
 ```bash
-agentcore add skill --harness my_harness \
+agentcore add skill --harness research_agent \
   --s3 s3://my-skills-bucket/skills/company-style/
 agentcore deploy
 ```
@@ -1327,7 +1329,7 @@ COPY skills/xlsx .agents/skills/xlsx
 Or install it at session start, before the first agent invocation:
 
 ```bash
-agentcore invoke --exec --harness my_agent --session-id "$SESSION" \
+agentcore invoke --exec --harness research_agent --session-id "$SESSION" \
   "git clone --depth 1 https://github.com/anthropics/skills /tmp/skills && cp -r /tmp/skills/skills/xlsx .agents/skills/xlsx"
 ```
 
@@ -1561,15 +1563,15 @@ Not everything needs to go through the model. `InvokeAgentRuntimeCommand` gives 
 export SESSION_ID="$(uuidgen)"
 
 # Prepare: install dependencies before the agent starts
-agentcore invoke --exec --harness my_agent --session-id "$SESSION_ID" \
+agentcore invoke --exec --harness research_agent --session-id "$SESSION_ID" \
   "pip install pandas matplotlib"
 
 # Let the agent work
-agentcore invoke --harness my_agent --session-id "$SESSION_ID" \
+agentcore invoke --harness research_agent --session-id "$SESSION_ID" \
   "Load /tmp/input.csv, compute monthly totals, save to /tmp/results.csv."
 
 # Act on the output — same session, so same filesystem
-agentcore invoke --exec --harness my_agent --session-id "$SESSION_ID" \
+agentcore invoke --exec --harness research_agent --session-id "$SESSION_ID" \
   "ls -la /tmp && cat /tmp/results.csv"
 ```
 
@@ -1627,7 +1629,7 @@ aws bedrock-agentcore-control create-harness \
 Verify with the exec API — a good use of Step 1:
 
 ```bash
-agentcore invoke --exec --harness my_agent --session-id "$SESSION_ID" "env | grep MY_API_URL"
+agentcore invoke --exec --harness research_agent --session-id "$SESSION_ID" "env | grep MY_API_URL"
 ```
 
 ### Step 3 — Bring your own container
@@ -1711,12 +1713,32 @@ aws bedrock-agentcore-control update-harness \
   --environment '{"agentCoreRuntimeEnvironment": {"filesystemConfigurations": [{"sessionStorage": {"mountPath": "/mnt/data/"}}]}}'
 ```
 
-*AgentCore CLI*
+*AgentCore CLI · new resources only*
 
 ```bash
+# A new project, with session storage from the start
 agentcore create --name myagent --session-storage-mount-path /mnt/data/
-# or on an existing harness
-agentcore add harness --name my_agent --session-storage /mnt/data/
+
+# A new harness inside an existing project
+agentcore add harness --name storage_agent --session-storage /mnt/data/
+agentcore deploy
+```
+
+> **Warning — `add harness` creates; it never updates**
+>
+> Reusing an existing name fails with `Error: Harness "x" already exists.` — there is no CLI verb that edits a deployed harness. To add session storage to the harness you have been building, edit its spec and redeploy:
+
+*app/research_agent/harness.json*
+
+```json
+{
+  "name": "research_agent",
+  "model": { "provider": "bedrock", "modelId": "us.anthropic.claude-sonnet-4-6" },
+  "sessionStoragePath": "/mnt/data/"
+}
+```
+
+```bash
 agentcore deploy
 ```
 

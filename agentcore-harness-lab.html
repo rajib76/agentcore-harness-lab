@@ -783,11 +783,12 @@ agentcore invoke --harness research_agent \
   <div class="col"><p><code>apiFormat</code> does not apply to <code>gemini</code> or <code>lite_llm</code> at all.</p></div>
 
   <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code># Bedrock model through the OpenAI-compatible Responses API
-agentcore add harness --name research_agent \
+agentcore add harness --name responses_agent \
   --model-provider bedrock \
   --model-id us.anthropic.claude-sonnet-4-5-20250929-v1:0 \
   --api-format responses
 agentcore deploy</code></pre></div>
+  <div class="col"><p>A <em>new</em> harness, because <code>add harness</code> refuses a name that already exists. To put <code>research_agent</code> itself on the Responses format instead, set <code>"apiFormat": "responses"</code> inside <code>model</code> in <code>app/research_agent/harness.json</code> and redeploy.</p></div>
 
   <div class="col">
   <p class="step">Step 4 &#x2014; Store a third-party API key</p>
@@ -891,13 +892,13 @@ response = client.invoke_harness(
       <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code>SESSION_ID="$(uuidgen)"
 
 # Turn 1: Bedrock, harness default API format
-agentcore invoke --harness my_agent \
+agentcore invoke --harness research_agent \
   --model-id us.anthropic.claude-sonnet-4-5-20250929-v1:0 \
   --session-id "$SESSION_ID" \
   "Analyze this codebase and identify performance bottlenecks."
 
 # Turn 2: OpenAI direct, same session
-agentcore invoke --harness my_agent \
+agentcore invoke --harness research_agent \
   --model-provider open_ai \
   --model-id gpt-5.4 \
   --api-key-arn "$KEY_ARN" \
@@ -1070,7 +1071,7 @@ response = client.invoke_harness(
         }},
     },
 ]</code></pre></div>
-  <div class="code"><div class="code-bar"><span class="code-lang">bash &#xB7; the unauthenticated case, on the CLI</span></div><pre><code>agentcore add tool --harness my_agent --type remote_mcp \
+  <div class="code"><div class="code-bar"><span class="code-lang">bash &#xB7; the unauthenticated case, on the CLI</span></div><pre><code>agentcore add tool --harness research_agent --type remote_mcp \
   --name exa --url https://mcp.exa.ai/mcp
 
 agentcore deploy</code></pre></div>
@@ -1117,12 +1118,12 @@ agentcore deploy</code></pre></div>
     }},
 }</code></pre></div>
   <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code># By ARN
-agentcore add tool --harness my_agent --type agentcore_gateway \
+agentcore add tool --harness research_agent --type agentcore_gateway \
   --name my-gateway \
   --gateway-arn arn:aws:bedrock-agentcore:us-west-2:123456789012:gateway/my-gateway
 
 # Or by project-local name
-agentcore add tool --harness my_agent --type agentcore_gateway \
+agentcore add tool --harness research_agent --type agentcore_gateway \
   --name my-gateway --gateway my-gateway</code></pre></div>
   <div class="col"><p>The execution role needs <code>bedrock-agentcore:InvokeGateway</code> on the gateway ARN:</p></div>
   <div class="code"><div class="code-bar"><span class="code-lang">json &#xB7; execution role addition</span></div><pre><code>{
@@ -1232,13 +1233,13 @@ client.invoke_harness(
 
   <p>On the CLI, declare the tool then fill in its schema in <code>harness.json</code>:</p>
   </div>
-  <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code>agentcore add tool --harness my_agent --type inline_function \
+  <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code>agentcore add tool --harness research_agent --type inline_function \
   --name approve_purchase \
   --description "Request human approval for a purchase" \
   --input-schema '{"type":"object","properties":{"item":{"type":"string"},"amount":{"type":"number"}},"required":["item","amount"]}'
 agentcore deploy
 
-agentcore invoke --harness my_agent \
+agentcore invoke --harness research_agent \
   "Find a mechanical keyboard under \$200 and request approval."</code></pre></div>
   <div class="col"><p>In the TUI the invocation pauses and prompts you for the tool result inline. In non-interactive CLI mode the stream returns <code>stopReason: "tool_use"</code> and you reply with a follow-up invoke.</p></div>
 
@@ -1352,13 +1353,13 @@ skills=[{"awsSkills": {"paths": [
     </div>
     <div class="tabpanel on">
       <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code># Public repo, single skill from a subdirectory
-agentcore add skill --harness my_harness \
+agentcore add skill --harness research_agent \
   --git https://github.com/anthropics/skills \
   --git-path skills/docx
 agentcore deploy
 
 # Private repo &#x2014; --credential names an API key credential holding a PAT
-agentcore add skill --harness my_harness \
+agentcore add skill --harness research_agent \
   --git https://github.com/my-org/internal-skills \
   --git-path excel \
   --credential my-github-pat
@@ -1423,7 +1424,7 @@ aws s3 cp company-style/ "s3://${SKILL_BUCKET}/skills/company-style/" --recursiv
     skills=[{"s3": {"uri": "s3://my-skills-bucket/skills/company-style/"}}],
     messages=[{"role": "user", "content": [{"text": "Draft a summary following our style guide."}]}],
 )</code></pre></div>
-  <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code>agentcore add skill --harness my_harness \
+  <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code>agentcore add skill --harness research_agent \
   --s3 s3://my-skills-bucket/skills/company-style/
 agentcore deploy</code></pre></div>
   <div class="col"><p>The execution role needs read access. Each S3 skill must be 1 GB or smaller.</p></div>
@@ -1443,7 +1444,7 @@ agentcore deploy</code></pre></div>
   </div>
   <div class="code"><div class="code-bar"><span class="code-lang">dockerfile</span></div><pre><code>COPY skills/xlsx .agents/skills/xlsx</code></pre></div>
   <div class="col"><p>Or install it at session start, before the first agent invocation:</p></div>
-  <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code>agentcore invoke --exec --harness my_agent --session-id "$SESSION" \
+  <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code>agentcore invoke --exec --harness research_agent --session-id "$SESSION" \
   "git clone --depth 1 https://github.com/anthropics/skills /tmp/skills && cp -r /tmp/skills/skills/xlsx .agents/skills/xlsx"</code></pre></div>
   <div class="code"><div class="code-bar"><span class="code-lang">python &#xB7; then reference it</span></div><pre><code>skills=[{"path": ".agents/skills/xlsx"}]</code></pre></div>
 
@@ -1651,15 +1652,15 @@ agentcore deploy</code></pre></div>
       <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code>export SESSION_ID="$(uuidgen)"
 
 # Prepare: install dependencies before the agent starts
-agentcore invoke --exec --harness my_agent --session-id "$SESSION_ID" \
+agentcore invoke --exec --harness research_agent --session-id "$SESSION_ID" \
   "pip install pandas matplotlib"
 
 # Let the agent work
-agentcore invoke --harness my_agent --session-id "$SESSION_ID" \
+agentcore invoke --harness research_agent --session-id "$SESSION_ID" \
   "Load /tmp/input.csv, compute monthly totals, save to /tmp/results.csv."
 
 # Act on the output &#x2014; same session, so same filesystem
-agentcore invoke --exec --harness my_agent --session-id "$SESSION_ID" \
+agentcore invoke --exec --harness research_agent --session-id "$SESSION_ID" \
   "ls -la /tmp && cat /tmp/results.csv"</code></pre></div>
       <div class="col"><p>In the TUI, press <code>!</code> to enter exec mode and run commands inline.</p></div>
     </div>
@@ -1703,7 +1704,7 @@ for event in response["stream"]:
   }
 }</code></pre></div>
   <div class="col"><p>Verify with the exec API &#x2014; a good use of Step 1:</p></div>
-  <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code>agentcore invoke --exec --harness my_agent --session-id "$SESSION_ID" "env | grep MY_API_URL"</code></pre></div>
+  <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code>agentcore invoke --exec --harness research_agent --session-id "$SESSION_ID" "env | grep MY_API_URL"</code></pre></div>
 
   <div class="col">
   <p class="step">Step 3 &#x2014; Bring your own container</p>
@@ -1774,10 +1775,25 @@ agentcore deploy</code></pre></div>
   <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code>aws bedrock-agentcore-control update-harness \
   --harness-id "$HARNESS_ID" \
   --environment '{"agentCoreRuntimeEnvironment": {"filesystemConfigurations": [{"sessionStorage": {"mountPath": "/mnt/data/"}}]}}'</code></pre></div>
-  <div class="code"><div class="code-bar"><span class="code-lang">bash &#xB7; AgentCore CLI</span></div><pre><code>agentcore create --name myagent --session-storage-mount-path /mnt/data/
-# or on an existing harness
-agentcore add harness --name my_agent --session-storage /mnt/data/
+  <div class="code"><div class="code-bar"><span class="code-lang">bash &#xB7; AgentCore CLI &#xB7; new resources only</span></div><pre><code># A new project, with session storage from the start
+agentcore create --name myagent --session-storage-mount-path /mnt/data/
+
+# A new harness inside an existing project
+agentcore add harness --name storage_agent --session-storage /mnt/data/
 agentcore deploy</code></pre></div>
+
+  <div class="col">
+  <div class="warn"><b><code>add harness</code> creates; it never updates</b>
+  <p>Reusing an existing name fails with <code>Error: Harness "x" already exists.</code> &#x2014; there is no CLI verb that edits a deployed harness. To add session storage to the harness you have been building, edit its spec and redeploy:</p>
+  </div>
+  </div>
+
+  <div class="code"><div class="code-bar"><span class="code-lang">json &#xB7; app/research_agent/harness.json</span></div><pre><code>{
+  "name": "research_agent",
+  "model": { "provider": "bedrock", "modelId": "us.anthropic.claude-sonnet-4-6" },
+  "sessionStoragePath": "/mnt/data/"
+}</code></pre></div>
+  <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code>agentcore deploy</code></pre></div>
 
   <div class="col"><p>EFS and S3 Files both require VPC network mode. EFS:</p></div>
   <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code>aws bedrock-agentcore-control create-harness \
