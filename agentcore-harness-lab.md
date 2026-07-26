@@ -472,7 +472,7 @@ If you never specify a model, the harness uses Claude Sonnet 4.6 on Bedrock (`gl
 
 > **Warning — Why this bites**
 >
-> The surrounding ecosystem disagrees with both rules — tool *types* are hyphenated (`agentcore-browser`), as are CLI flags and most AWS resource names, so a hyphen is the natural thing to type. Remember also that `agentcore create --name X` creates a project *and* a harness called `X`, so a project name has to satisfy the stricter of the two. Nothing is created when validation fails; correct the name and rerun.
+> A hyphen is the natural thing to type, because CLI flags and most AWS resource names use them — and the CLI's own enum values are genuinely inconsistent about it. Credential types are hyphenated (`--type api-key`); tool types are not (`--type agentcore_browser`, `--tools agentcore_browser,agentcore_code_interpreter`). Read the enum in `--help` rather than inferring it from a neighbouring flag. Remember also that `agentcore create --name X` creates a project *and* a harness called `X`, so a project name has to satisfy the stricter of the two. Nothing is created when validation fails; correct the name and rerun.
 >
 > This lab uses `research_agent` for the harness and `researchagent` for the project throughout.
 
@@ -483,7 +483,7 @@ agentcore add harness \
   --name research_agent \
   --model-id us.anthropic.claude-sonnet-4-6-20250514-v1:0 \
   --system-prompt "You are a research assistant. Cite sources." \
-  --tools agentcore-browser
+  --tools agentcore_browser
 
 agentcore deploy
 ```
@@ -533,7 +533,7 @@ agentcore invoke --harness research_agent \
 
 # Swap tools for one call
 agentcore invoke --harness research_agent \
-  --tools agentcore-browser,code-interpreter \
+  --tools agentcore_browser,agentcore_code_interpreter \
   "Plot the citation counts as a bar chart"
 ```
 
@@ -687,10 +687,9 @@ response = client.invoke_harness(
 ```bash
 SESSION_ID="$(uuidgen)"
 
-# Turn 1: Bedrock Mantle, Responses format
+# Turn 1: Bedrock, harness default API format
 agentcore invoke --harness my_agent \
   --model-id us.anthropic.claude-sonnet-4-5-20250514-v1:0 \
-  --api-format responses \
   --session-id "$SESSION_ID" \
   "Analyze this codebase and identify performance bottlenecks."
 
@@ -702,6 +701,10 @@ agentcore invoke --harness my_agent \
   --session-id "$SESSION_ID" \
   "Now suggest fixes for the top three issues."
 ```
+
+> **Note — The CLI exposes fewer per-call overrides than the API**
+>
+> `agentcore invoke` overrides the model with `--model-id`, `--model-provider`, `--api-key-arn`, `--api-base` and `--additional-params` — but there is no `--api-format`. The boto3 tab sets `apiFormat` per call because `InvokeHarness` accepts it; the CLI does not surface it. To change the format, set it as a harness default with `agentcore add harness --api-format`, or call the API directly. Check `agentcore invoke --help` before assuming a boto3 field has a flag — the mapping is not one to one.
 
 ### Step 6 — Reach any provider through LiteLLM
 
@@ -867,18 +870,30 @@ tools = [
 ]
 ```
 
-*same three, on the CLI*
+*the unauthenticated case, on the CLI*
 
 ```bash
 agentcore add tool --harness my_agent --type remote_mcp \
   --name exa --url https://mcp.exa.ai/mcp
 
-agentcore add tool --harness my_agent --type remote_mcp \
-  --name exa-secure --url https://mcp.exa.ai/mcp \
-  --header 'x-api-key=${arn:aws:bedrock-agentcore:us-west-2:123456789012:token-vault/default/apikeycredentialprovider/my-exa-key}'
-
 agentcore deploy
 ```
+
+> **Warning — `add tool` cannot set MCP headers**
+>
+> There is no `--header` on `agentcore add tool` (0.24.x) — check `agentcore add tool --help`. The `-H, --header` you may remember belongs to `agentcore invoke`, where it sets headers on *your* request to the runtime, not on the agent's outbound MCP calls. Two supported routes for an authenticated server:
+
+*headers at harness-creation time*
+
+```bash
+agentcore add harness --name secure_mcp_agent \
+  --tools remote_mcp \
+  --mcp-name exa-secure \
+  --mcp-url https://mcp.exa.ai/mcp \
+  --mcp-headers '{"x-api-key": "${arn:aws:bedrock-agentcore:us-west-2:123456789012:token-vault/default/apikeycredentialprovider/my-exa-key}"}'
+```
+
+Or, to add a secured server to a harness that already exists, edit its `harness.json` directly — the `tools` array takes the same shape as the boto3 block above — then `agentcore deploy`.
 
 > **Note — When to reach for Gateway instead**
 >
@@ -1457,13 +1472,16 @@ aws bedrock-agentcore-control update-harness \
   --memory '{"optionalValue": {"agentCoreMemoryConfiguration": {"arn": "arn:aws:bedrock-agentcore:us-west-2:123456789012:memory/MyMemory-abc123"}}}'
 ```
 
-*or at create time on the CLI*
+*or on the CLI*
 
 ```bash
-agentcore create --name myagent \
+agentcore add harness --name myagent \
+  --memory-mode existing \
   --memory-arn "arn:aws:bedrock-agentcore:us-west-2:123456789012:memory/MyMemory-abc123"
 agentcore deploy
 ```
+
+`--memory-arn` lives on `add harness`, not on `agentcore create` — `create` only takes `--memory none|shortTerm|longAndShortTerm`, which provisions a *new* managed memory rather than attaching an existing one. Pair the ARN with `--memory-mode existing`.
 
 *or turn memory off entirely*
 
@@ -1753,18 +1771,25 @@ The flags take `<accessPointArn>:<mountPath>`. Access point ARNs contain colons 
 Every invocation generates traces, logs and metrics through AgentCore Observability in CloudWatch, with no extra configuration. Model calls, tool invocations, memory operations and shell commands each appear with timing and payload detail. Traces are available from the very first invocation — assuming you enabled Transaction Search in Lab 01.
 
 ```bash
-# Stream logs
-agentcore logs --harness research_agent
+# Stream logs. With one deployed runtime, omit the selector entirely.
+agentcore logs
 
 # Filter
-agentcore logs --harness research_agent --since 1h --level error
+agentcore logs --since 1h --level error
 
 # List recent traces
-agentcore traces list --harness research_agent
+agentcore traces list
 
 # Inspect one
-agentcore traces get <trace-id> --harness research_agent
+agentcore traces get <trace-id>
+
+# Select explicitly when the project has more than one runtime
+agentcore logs --runtime harness_researchagent_research_agent
 ```
+
+> **Warning — `logs` and `traces` select by runtime, not by harness**
+>
+> These three commands take `--runtime`; there is no `--harness` flag on any of them, unlike `invoke`, `add tool` and `add skill`. The runtime backing a harness is named `harness_<project>_<harness>` — so project `researchagent` with harness `research_agent` gives `harness_researchagent_research_agent`. This is the same name you will see in `list-agent-runtimes` and in the CloudWatch log group path, and it is a reminder that a harness runs *inside* Runtime.
 
 Or open the [AgentCore Observability dashboard](https://us-west-2.console.aws.amazon.com/cloudwatch/home?region=us-west-2#/gen-ai-observability/agent-core/agents) in CloudWatch. The value here is the unified view — one place that shows what the agent did across every capability, instead of stitching together separate log groups for the model, the browser, the code interpreter and memory.
 

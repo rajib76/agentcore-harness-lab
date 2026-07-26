@@ -672,7 +672,7 @@ agentcore dev --logs          # non-interactive, logs to stdout</code></pre></di
 
   <div class="col">
   <div class="warn"><b>Why this bites</b>
-  <p>The surrounding ecosystem disagrees with both rules &#x2014; tool <em>types</em> are hyphenated (<code>agentcore-browser</code>), as are CLI flags and most AWS resource names, so a hyphen is the natural thing to type. Remember also that <code>agentcore create --name X</code> creates a project <em>and</em> a harness called <code>X</code>, so a project name has to satisfy the stricter of the two. Nothing is created when validation fails; correct the name and rerun.</p>
+  <p>A hyphen is the natural thing to type, because CLI flags and most AWS resource names use them &#x2014; and the CLI's own enum values are genuinely inconsistent about it. Credential types are hyphenated (<code>--type api-key</code>); tool types are not (<code>--type agentcore_browser</code>, <code>--tools agentcore_browser,agentcore_code_interpreter</code>). Read the enum in <code>--help</code> rather than inferring it from a neighbouring flag. Remember also that <code>agentcore create --name X</code> creates a project <em>and</em> a harness called <code>X</code>, so a project name has to satisfy the stricter of the two. Nothing is created when validation fails; correct the name and rerun.</p>
   <p>This lab uses <code>research_agent</code> for the harness and <code>researchagent</code> for the project throughout.</p></div>
   </div>
 
@@ -686,7 +686,7 @@ agentcore dev --logs          # non-interactive, logs to stdout</code></pre></di
   --name research_agent \
   --model-id us.anthropic.claude-sonnet-4-6-20250514-v1:0 \
   --system-prompt "You are a research assistant. Cite sources." \
-  --tools agentcore-browser
+  --tools agentcore_browser
 
 agentcore deploy</code></pre></div>
       <div class="col"><p>To change defaults permanently later, edit <code>app/research_agent/harness.json</code> and run <code>agentcore deploy</code> again.</p></div>
@@ -733,7 +733,7 @@ agentcore invoke --harness research_agent \
 
 # Swap tools for one call
 agentcore invoke --harness research_agent \
-  --tools agentcore-browser,code-interpreter \
+  --tools agentcore_browser,agentcore_code_interpreter \
   "Plot the citation counts as a bar chart"</code></pre></div>
     </div>
   </div>
@@ -878,10 +878,9 @@ response = client.invoke_harness(
     <div class="tabpanel">
       <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code>SESSION_ID="$(uuidgen)"
 
-# Turn 1: Bedrock Mantle, Responses format
+# Turn 1: Bedrock, harness default API format
 agentcore invoke --harness my_agent \
   --model-id us.anthropic.claude-sonnet-4-5-20250514-v1:0 \
-  --api-format responses \
   --session-id "$SESSION_ID" \
   "Analyze this codebase and identify performance bottlenecks."
 
@@ -892,6 +891,10 @@ agentcore invoke --harness my_agent \
   --api-key-arn "$KEY_ARN" \
   --session-id "$SESSION_ID" \
   "Now suggest fixes for the top three issues."</code></pre></div>
+      <div class="col">
+      <div class="note"><b>The CLI exposes fewer per-call overrides than the API</b>
+      <p><code>agentcore invoke</code> overrides the model with <code>--model-id</code>, <code>--model-provider</code>, <code>--api-key-arn</code>, <code>--api-base</code> and <code>--additional-params</code> &#x2014; but there is no <code>--api-format</code>. The boto3 tab sets <code>apiFormat</code> per call because <code>InvokeHarness</code> accepts it; the CLI does not surface it. To change the format, set it as a harness default with <code>agentcore add harness --api-format</code>, or call the API directly. Check <code>agentcore invoke --help</code> before assuming a boto3 field has a flag &#x2014; the mapping is not one to one.</p></div>
+      </div>
     </div>
   </div>
 
@@ -1055,15 +1058,26 @@ response = client.invoke_harness(
         }},
     },
 ]</code></pre></div>
-  <div class="code"><div class="code-bar"><span class="code-lang">bash &#xB7; same three, on the CLI</span></div><pre><code>agentcore add tool --harness my_agent --type remote_mcp \
+  <div class="code"><div class="code-bar"><span class="code-lang">bash &#xB7; the unauthenticated case, on the CLI</span></div><pre><code>agentcore add tool --harness my_agent --type remote_mcp \
   --name exa --url https://mcp.exa.ai/mcp
 
-agentcore add tool --harness my_agent --type remote_mcp \
-  --name exa-secure --url https://mcp.exa.ai/mcp \
-  --header 'x-api-key=${arn:aws:bedrock-agentcore:us-west-2:123456789012:token-vault/default/apikeycredentialprovider/my-exa-key}'
-
 agentcore deploy</code></pre></div>
-  <div class="col"><div class="note"><b>When to reach for Gateway instead</b>
+
+  <div class="col">
+  <div class="warn"><b><code>add tool</code> cannot set MCP headers</b>
+  <p>There is no <code>--header</code> on <code>agentcore add tool</code> (0.24.x) &#x2014; check <code>agentcore add tool --help</code>. The <code>-H, --header</code> you may remember belongs to <code>agentcore invoke</code>, where it sets headers on <em>your</em> request to the runtime, not on the agent's outbound MCP calls. Two supported routes for an authenticated server:</p>
+  </div>
+  </div>
+
+  <div class="code"><div class="code-bar"><span class="code-lang">bash &#xB7; headers at harness-creation time</span></div><pre><code>agentcore add harness --name secure_mcp_agent \
+  --tools remote_mcp \
+  --mcp-name exa-secure \
+  --mcp-url https://mcp.exa.ai/mcp \
+  --mcp-headers '{"x-api-key": "${arn:aws:bedrock-agentcore:us-west-2:123456789012:token-vault/default/apikeycredentialprovider/my-exa-key}"}'</code></pre></div>
+
+  <div class="col"><p>Or, to add a secured server to a harness that already exists, edit its <code>harness.json</code> directly &#x2014; the <code>tools</code> array takes the same shape as the boto3 block above &#x2014; then <code>agentcore deploy</code>.</p>
+
+  <div class="note"><b>When to reach for Gateway instead</b>
   <p>For managed credential rotation and OAuth-protected tools, put the MCP server behind AgentCore Gateway and use AgentCore Identity rather than raw headers.</p></div></div>
 
   <div class="col">
@@ -1557,9 +1571,11 @@ ask_as("user-123", "What units do I prefer?")     # should say metric</code></pr
 aws bedrock-agentcore-control update-harness \
   --harness-id "$HARNESS_ID" \
   --memory '{"optionalValue": {"agentCoreMemoryConfiguration": {"arn": "arn:aws:bedrock-agentcore:us-west-2:123456789012:memory/MyMemory-abc123"}}}'</code></pre></div>
-  <div class="code"><div class="code-bar"><span class="code-lang">bash &#xB7; or at create time on the CLI</span></div><pre><code>agentcore create --name myagent \
+  <div class="code"><div class="code-bar"><span class="code-lang">bash &#xB7; or on the CLI</span></div><pre><code>agentcore add harness --name myagent \
+  --memory-mode existing \
   --memory-arn "arn:aws:bedrock-agentcore:us-west-2:123456789012:memory/MyMemory-abc123"
 agentcore deploy</code></pre></div>
+  <div class="col"><p><code>--memory-arn</code> lives on <code>add harness</code>, not on <code>agentcore create</code> &#x2014; <code>create</code> only takes <code>--memory none|shortTerm|longAndShortTerm</code>, which provisions a <em>new</em> managed memory rather than attaching an existing one. Pair the ARN with <code>--memory-mode existing</code>.</p></div>
   <div class="code"><div class="code-bar"><span class="code-lang">bash &#xB7; or turn memory off entirely</span></div><pre><code>aws bedrock-agentcore-control update-harness \
   --harness-id "$HARNESS_ID" \
   --memory '{"optionalValue": {"disabled": {}}}'</code></pre></div>
@@ -1808,17 +1824,25 @@ agentcore deploy</code></pre></div>
   <p class="step">Step 1 &#x2014; Read the traces</p>
   <p>Every invocation generates traces, logs and metrics through AgentCore Observability in CloudWatch, with no extra configuration. Model calls, tool invocations, memory operations and shell commands each appear with timing and payload detail. Traces are available from the very first invocation &#x2014; assuming you enabled Transaction Search in Lab 01.</p>
   </div>
-  <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code># Stream logs
-agentcore logs --harness research_agent
+  <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code># Stream logs. With one deployed runtime, omit the selector entirely.
+agentcore logs
 
 # Filter
-agentcore logs --harness research_agent --since 1h --level error
+agentcore logs --since 1h --level error
 
 # List recent traces
-agentcore traces list --harness research_agent
+agentcore traces list
 
 # Inspect one
-agentcore traces get &lt;trace-id&gt; --harness research_agent</code></pre></div>
+agentcore traces get &lt;trace-id&gt;
+
+# Select explicitly when the project has more than one runtime
+agentcore logs --runtime harness_researchagent_research_agent</code></pre></div>
+
+  <div class="col">
+  <div class="warn"><b><code>logs</code> and <code>traces</code> select by runtime, not by harness</b>
+  <p>These three commands take <code>--runtime</code>; there is no <code>--harness</code> flag on any of them, unlike <code>invoke</code>, <code>add tool</code> and <code>add skill</code>. The runtime backing a harness is named <code>harness_&lt;project&gt;_&lt;harness&gt;</code> &#x2014; so project <code>researchagent</code> with harness <code>research_agent</code> gives <code>harness_researchagent_research_agent</code>. This is the same name you will see in <code>list-agent-runtimes</code> and in the CloudWatch log group path, and it is a reminder that a harness runs <em>inside</em> Runtime.</p></div>
+  </div>
   <div class="col"><p>Or open the <a href="https://us-west-2.console.aws.amazon.com/cloudwatch/home?region=us-west-2#/gen-ai-observability/agent-core/agents">AgentCore Observability dashboard</a> in CloudWatch. The value here is the unified view &#x2014; one place that shows what the agent did across every capability, instead of stitching together separate log groups for the model, the browser, the code interpreter and memory.</p>
   <p>Go back to a Lab 04 invocation that used both the browser and the code interpreter, and follow it end to end in a single trace.</p>
 
