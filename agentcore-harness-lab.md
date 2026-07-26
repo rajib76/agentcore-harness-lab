@@ -457,11 +457,30 @@ If you never specify a model, the harness uses Claude Sonnet 4.6 on Bedrock (`gl
 >
 > Marketplace agreements are per model, not per account. The moment you point a harness at a model you have not used before — here, or in the per-call override in Step 2 — repeat Lab 01 Step 5 for that model id first, or the invocation fails with the misleading `aws-marketplace:ViewSubscriptions` error. Switching between inference profiles of the *same* model (`global.` ↔ `us.`) needs nothing new.
 
+> **Warning — Names reject hyphens — and the two name rules differ**
+>
+> A hyphen anywhere in a harness or project name fails validation before anything is written:
+>
+> `ConfigValidationError: name: Must begin with a letter and contain only alphanumeric characters and underscores (max 40 chars)`
+>
+> The two rules are not the same, which is the part that catches people out:
+
+| Name | Set by | Pattern | Underscores |
+|---|---|---|---|
+| Harness | `add harness --name`, `harness.json` | `^[a-zA-Z][a-zA-Z0-9_]{0,39}$` | Allowed — `research_agent` |
+| Project | `agentcore create --name` | Letter, then alphanumerics only | **Rejected** — `researchagent` |
+
+> **Warning — Why this bites**
+>
+> The surrounding ecosystem disagrees with both rules — tool *types* are hyphenated (`agentcore-browser`), as are CLI flags and most AWS resource names, so a hyphen is the natural thing to type. Remember also that `agentcore create --name X` creates a project *and* a harness called `X`, so a project name has to satisfy the stricter of the two. Nothing is created when validation fails; correct the name and rerun.
+>
+> This lab uses `research_agent` for the harness and `researchagent` for the project throughout.
+
 #### AgentCore CLI
 
 ```bash
 agentcore add harness \
-  --name research-agent \
+  --name research_agent \
   --model-id us.anthropic.claude-sonnet-4-6-20250514-v1:0 \
   --system-prompt "You are a research assistant. Cite sources." \
   --tools agentcore-browser
@@ -469,13 +488,13 @@ agentcore add harness \
 agentcore deploy
 ```
 
-To change defaults permanently later, edit `app/research-agent/harness.json` and run `agentcore deploy` again.
+To change defaults permanently later, edit `app/research_agent/harness.json` and run `agentcore deploy` again.
 
 #### AWS CLI
 
 ```bash
 aws bedrock-agentcore-control create-harness \
-  --harness-name "research-agent" \
+  --harness-name "research_agent" \
   --execution-role-arn "$ROLE_ARN" \
   --system-prompt '[{"text": "You are a research assistant. Cite sources."}]' \
   --tools '[{"type": "agentcore_browser", "name": "browser"}]'
@@ -508,12 +527,12 @@ response = client.invoke_harness(
 
 ```bash
 # Switch the model for one call
-agentcore invoke --harness research-agent \
+agentcore invoke --harness research_agent \
   --model-id us.anthropic.claude-opus-4-5-20251101-v1:0 \
   "Summarize this research paper"
 
 # Swap tools for one call
-agentcore invoke --harness research-agent \
+agentcore invoke --harness research_agent \
   --tools agentcore-browser,code-interpreter \
   "Plot the citation counts as a bar chart"
 ```
@@ -556,7 +575,7 @@ On `openAiModelConfig` the field behaves ordinarily: it picks the protocol only 
 
 ```bash
 # Bedrock model through the OpenAI-compatible Responses API
-agentcore add harness --name research-agent \
+agentcore add harness --name research_agent \
   --model-provider bedrock \
   --model-id us.anthropic.claude-sonnet-4-5-20250514-v1:0 \
   --api-format responses
@@ -669,14 +688,14 @@ response = client.invoke_harness(
 SESSION_ID="$(uuidgen)"
 
 # Turn 1: Bedrock Mantle, Responses format
-agentcore invoke --harness my-agent \
+agentcore invoke --harness my_agent \
   --model-id us.anthropic.claude-sonnet-4-5-20250514-v1:0 \
   --api-format responses \
   --session-id "$SESSION_ID" \
   "Analyze this codebase and identify performance bottlenecks."
 
 # Turn 2: OpenAI direct, same session
-agentcore invoke --harness my-agent \
+agentcore invoke --harness my_agent \
   --model-provider open_ai \
   --model-id gpt-5.4 \
   --api-key-arn "$KEY_ARN" \
@@ -697,7 +716,7 @@ agentcore invoke --harness my-agent \
 | `maxTokens`, `temperature`, `topP` | Optional sampling controls. |
 
 ```bash
-agentcore add harness --name proxy-agent \
+agentcore add harness --name proxy_agent \
   --model-provider lite_llm \
   --model-id openai/gpt-5.4 \
   --api-base https://my-llm-gateway.example.com/v1 \
@@ -779,16 +798,16 @@ Two built-ins are present in every session unless you restrict them: `shell` exe
 #### AgentCore CLI
 
 ```bash
-agentcore add tool --harness research-agent \
+agentcore add tool --harness research_agent \
   --type agentcore_browser --name browser
 
-agentcore add tool --harness research-agent \
+agentcore add tool --harness research_agent \
   --type agentcore_code_interpreter --name code-interpreter
 
 agentcore deploy
 
 # Exercise both
-agentcore invoke --harness research-agent \
+agentcore invoke --harness research_agent \
   "Look up the 5 largest US national parks by area, then compute the mean and plot a bar chart."
 ```
 
@@ -851,10 +870,10 @@ tools = [
 *same three, on the CLI*
 
 ```bash
-agentcore add tool --harness my-agent --type remote_mcp \
+agentcore add tool --harness my_agent --type remote_mcp \
   --name exa --url https://mcp.exa.ai/mcp
 
-agentcore add tool --harness my-agent --type remote_mcp \
+agentcore add tool --harness my_agent --type remote_mcp \
   --name exa-secure --url https://mcp.exa.ai/mcp \
   --header 'x-api-key=${arn:aws:bedrock-agentcore:us-west-2:123456789012:token-vault/default/apikeycredentialprovider/my-exa-key}'
 
@@ -894,12 +913,12 @@ A gateway is a governed tool surface: reference one ARN and every tool configure
 
 ```bash
 # By ARN
-agentcore add tool --harness my-agent --type agentcore_gateway \
+agentcore add tool --harness my_agent --type agentcore_gateway \
   --name my-gateway \
   --gateway-arn arn:aws:bedrock-agentcore:us-west-2:123456789012:gateway/my-gateway
 
 # Or by project-local name
-agentcore add tool --harness my-agent --type agentcore_gateway \
+agentcore add tool --harness my_agent --type agentcore_gateway \
   --name my-gateway --gateway my-gateway
 ```
 
@@ -941,19 +960,19 @@ tools = [
 ]
 
 client.create_harness(
-    harnessName="research-agent",
+    harnessName="research_agent",
     executionRoleArn="arn:aws:iam::123456789012:role/MyHarnessRole",
     tools=tools,
 )
 ```
 
 ```bash
-agentcore add tool --harness research-agent --type agentcore_gateway \
+agentcore add tool --harness research_agent --type agentcore_gateway \
   --name web-search \
   --gateway-arn arn:aws:bedrock-agentcore:us-east-1:123456789012:gateway/my-web-search-gateway
 
 agentcore deploy
-agentcore invoke --harness research-agent \
+agentcore invoke --harness research_agent \
   "Search the web for the latest AWS announcements and cite your sources."
 ```
 
@@ -1043,13 +1062,13 @@ client.invoke_harness(
 On the CLI, declare the tool then fill in its schema in `harness.json`:
 
 ```bash
-agentcore add tool --harness my-agent --type inline_function \
+agentcore add tool --harness my_agent --type inline_function \
   --name approve_purchase \
   --description "Request human approval for a purchase" \
   --input-schema '{"type":"object","properties":{"item":{"type":"string"},"amount":{"type":"number"}},"required":["item","amount"]}'
 agentcore deploy
 
-agentcore invoke --harness my-agent \
+agentcore invoke --harness my_agent \
   "Find a mechanical keyboard under \$200 and request approval."
 ```
 
@@ -1074,7 +1093,7 @@ In the TUI the invocation pauses and prompts you for the tool result inline. In 
 *try to make the agent break its own restriction*
 
 ```bash
-agentcore invoke --harness research-agent \
+agentcore invoke --harness research_agent \
   --allowed-tools "@builtin/file_operations,agentcore_code_interpreter" \
   "Run 'whoami' in the shell, then tell me what it printed."
 ```
@@ -1167,13 +1186,13 @@ Paths must be relative — no leading `/`, no `..`. A glob that matches nothing 
 
 ```bash
 # Public repo, single skill from a subdirectory
-agentcore add skill --harness my-harness \
+agentcore add skill --harness my_harness \
   --git https://github.com/anthropics/skills \
   --git-path skills/docx
 agentcore deploy
 
 # Private repo — --credential names an API key credential holding a PAT
-agentcore add skill --harness my-harness \
+agentcore add skill --harness my_harness \
   --git https://github.com/my-org/internal-skills \
   --git-path excel \
   --credential my-github-pat
@@ -1247,7 +1266,7 @@ response = client.invoke_harness(
 ```
 
 ```bash
-agentcore add skill --harness my-harness \
+agentcore add skill --harness my_harness \
   --s3 s3://my-skills-bucket/skills/company-style/
 agentcore deploy
 ```
@@ -1279,7 +1298,7 @@ COPY skills/xlsx .agents/skills/xlsx
 Or install it at session start, before the first agent invocation:
 
 ```bash
-agentcore invoke --exec --harness my-agent --session-id "$SESSION" \
+agentcore invoke --exec --harness my_agent --session-id "$SESSION" \
   "git clone --depth 1 https://github.com/anthropics/skills /tmp/skills && cp -r /tmp/skills/skills/xlsx .agents/skills/xlsx"
 ```
 
@@ -1510,15 +1529,15 @@ Not everything needs to go through the model. `InvokeAgentRuntimeCommand` gives 
 export SESSION_ID="$(uuidgen)"
 
 # Prepare: install dependencies before the agent starts
-agentcore invoke --exec --harness my-agent --session-id "$SESSION_ID" \
+agentcore invoke --exec --harness my_agent --session-id "$SESSION_ID" \
   "pip install pandas matplotlib"
 
 # Let the agent work
-agentcore invoke --harness my-agent --session-id "$SESSION_ID" \
+agentcore invoke --harness my_agent --session-id "$SESSION_ID" \
   "Load /tmp/input.csv, compute monthly totals, save to /tmp/results.csv."
 
 # Act on the output — same session, so same filesystem
-agentcore invoke --exec --harness my-agent --session-id "$SESSION_ID" \
+agentcore invoke --exec --harness my_agent --session-id "$SESSION_ID" \
   "ls -la /tmp && cat /tmp/results.csv"
 ```
 
@@ -1576,7 +1595,7 @@ aws bedrock-agentcore-control create-harness \
 Verify with the exec API — a good use of Step 1:
 
 ```bash
-agentcore invoke --exec --harness my-agent --session-id "$SESSION_ID" "env | grep MY_API_URL"
+agentcore invoke --exec --harness my_agent --session-id "$SESSION_ID" "env | grep MY_API_URL"
 ```
 
 ### Step 3 — Bring your own container
@@ -1604,11 +1623,11 @@ COPY skills/xlsx .agents/skills/xlsx
 
 ```bash
 # The CLI builds, pushes to ECR and attaches on deploy
-agentcore create --name coding-agent --container ./Dockerfile
+agentcore create --name codingagent --container ./Dockerfile
 agentcore deploy
 
 # Or reference a pre-built public image
-agentcore create --name node-agent \
+agentcore create --name nodeagent \
   --container public.ecr.aws/docker/library/node:slim
 agentcore deploy
 ```
@@ -1665,7 +1684,7 @@ aws bedrock-agentcore-control update-harness \
 ```bash
 agentcore create --name myagent --session-storage-mount-path /mnt/data/
 # or on an existing harness
-agentcore add harness --name my-agent --session-storage /mnt/data/
+agentcore add harness --name my_agent --session-storage /mnt/data/
 agentcore deploy
 ```
 
@@ -1699,7 +1718,7 @@ aws bedrock-agentcore-control create-harness \
 *S3 Files, on the CLI*
 
 ```bash
-agentcore add harness --name data-agent \
+agentcore add harness --name data_agent \
   --network-mode VPC \
   --subnets subnet-abc123,subnet-def456 \
   --security-groups sg-abc123 \
@@ -1735,16 +1754,16 @@ Every invocation generates traces, logs and metrics through AgentCore Observabil
 
 ```bash
 # Stream logs
-agentcore logs --harness research-agent
+agentcore logs --harness research_agent
 
 # Filter
-agentcore logs --harness research-agent --since 1h --level error
+agentcore logs --harness research_agent --since 1h --level error
 
 # List recent traces
-agentcore traces list --harness research-agent
+agentcore traces list --harness research_agent
 
 # Inspect one
-agentcore traces get <trace-id> --harness research-agent
+agentcore traces get <trace-id> --harness research_agent
 ```
 
 Or open the [AgentCore Observability dashboard](https://us-west-2.console.aws.amazon.com/cloudwatch/home?region=us-west-2#/gen-ai-observability/agent-core/agents) in CloudWatch. The value here is the unified view — one place that shows what the agent did across every capability, instead of stitching together separate log groups for the model, the browser, the code interpreter and memory.
@@ -1777,14 +1796,14 @@ All of these are optional; omit them for service defaults.
 #### AgentCore CLI
 
 ```bash
-agentcore add harness --name bounded-agent \
+agentcore add harness --name bounded_agent \
   --max-iterations 50 --timeout 1800 --max-tokens 8192 \
   --truncation-strategy sliding_window \
   --idle-timeout 600 --max-lifetime 14400
 agentcore deploy
 
 # Override for one call
-agentcore invoke --harness bounded-agent --max-iterations 20 --harness-timeout 600 \
+agentcore invoke --harness bounded_agent --max-iterations 20 --harness-timeout 600 \
   "Quick lookup: what's the weather in Seattle?"
 ```
 
@@ -1805,7 +1824,7 @@ Or pass `maxIterations`, `timeoutSeconds` or `maxTokens` directly in `invoke_har
 Set `--max-iterations 2` and give it a task that genuinely needs more cycles. Confirm you get `stopReason: "max_iterations_exceeded"` rather than a hallucinated answer.
 
 ```bash
-agentcore invoke --harness research-agent --max-iterations 2 --verbose \
+agentcore invoke --harness research_agent --max-iterations 2 --verbose \
   "Browse three separate sources, extract the population of each, and chart them."
 ```
 
@@ -2096,7 +2115,7 @@ aws bedrock-agentcore-control create-harness \
 ```
 
 ```bash
-agentcore add harness --name internal-agent \
+agentcore add harness --name internal_agent \
   --network-mode VPC \
   --subnets subnet-0abc1234def56789a \
   --security-groups sg-0abc1234def56789a

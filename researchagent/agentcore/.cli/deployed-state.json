@@ -1,0 +1,21 @@
+{
+  "targets": {
+    "default": {
+      "resources": {
+        "harnesses": {
+          "researchagent": {
+            "harnessId": "researchagent_researchagent-FjwgoA7T0B",
+            "harnessArn": "arn:aws:bedrock-agentcore:us-west-2:643045476917:harness/researchagent_researchagent-FjwgoA7T0B",
+            "roleArn": "arn:aws:iam::643045476917:role/researchagent_researchagent",
+            "status": "READY",
+            "harnessVersion": 1,
+            "agentRuntimeArn": "arn:aws:bedrock-agentcore:us-west-2:643045476917:runtime/harness_researchagent_researchagent-wb7GZL92B3",
+            "provisioner": "cloudformation"
+          }
+        },
+        "stackName": "AgentCore-researchagent-default",
+        "deployHash": "0a1786a5242328bb"
+      }
+    }
+  }
+}
