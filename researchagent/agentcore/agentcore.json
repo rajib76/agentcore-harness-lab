@@ -21,6 +21,10 @@
     {
       "name": "researchagent",
       "path": "app/researchagent"
+    },
+    {
+      "name": "research_agent",
+      "path": "app/research_agent"
     }
   ],
   "datasets": [],

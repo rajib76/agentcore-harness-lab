@@ -652,6 +652,18 @@ agentcore dev --logs          # non-interactive, logs to stdout</code></pre></di
   <p class="step">Step 1 &#x2014; Set defaults</p>
   <p>If you never specify a model, the harness uses Claude Sonnet 4.6 on Bedrock (<code>global.anthropic.claude-sonnet-4-6</code>). Make that explicit and add instructions.</p>
 
+  <div class="warn"><b>Do not guess the model id &#x2014; list them</b>
+  <p>Anthropic model ids are inconsistent about the dated <code>-YYYYMMDD-v1:0</code> suffix. Sonnet 4.6 has none (<code>us.anthropic.claude-sonnet-4-6</code>); Sonnet 4.5 does (<code>us.anthropic.claude-sonnet-4-5-20250929-v1:0</code>); Opus 4.5 does (<code>us.anthropic.claude-opus-4-5-20251101-v1:0</code>). Inventing a plausible-looking suffix produces a runtime failure, not a deploy-time one &#x2014; the harness deploys clean and fails on first invocation:</p>
+  <p><code>ValidationException: The provided model identifier is invalid.</code></p>
+  <p>Always copy the id from the live list rather than from memory or a blog post:</p>
+  </div>
+  </div>
+
+  <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code>aws bedrock list-inference-profiles --region "$AWS_REGION" \
+  --query "inferenceProfileSummaries[?contains(inferenceProfileId,'sonnet')].inferenceProfileId" \
+  --output text</code></pre></div>
+
+  <div class="col">
   <div class="warn"><b>Every model needs its own agreement</b>
   <p>Marketplace agreements are per model, not per account. The moment you point a harness at a model you have not used before &#x2014; here, or in the per-call override in Step 2 &#x2014; repeat Lab 01 Step 5 for that model id first, or the invocation fails with the misleading <code>aws-marketplace:ViewSubscriptions</code> error. Switching between inference profiles of the <em>same</em> model (<code>global.</code> &#x2194; <code>us.</code>) needs nothing new.</p></div>
 
@@ -684,7 +696,7 @@ agentcore dev --logs          # non-interactive, logs to stdout</code></pre></di
     <div class="tabpanel on">
       <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code>agentcore add harness \
   --name research_agent \
-  --model-id us.anthropic.claude-sonnet-4-6-20250514-v1:0 \
+  --model-id us.anthropic.claude-sonnet-4-6 \
   --system-prompt "You are a research assistant. Cite sources." \
   --tools agentcore_browser
 
@@ -773,7 +785,7 @@ agentcore invoke --harness research_agent \
   <div class="code"><div class="code-bar"><span class="code-lang">bash</span></div><pre><code># Bedrock model through the OpenAI-compatible Responses API
 agentcore add harness --name research_agent \
   --model-provider bedrock \
-  --model-id us.anthropic.claude-sonnet-4-5-20250514-v1:0 \
+  --model-id us.anthropic.claude-sonnet-4-5-20250929-v1:0 \
   --api-format responses
 agentcore deploy</code></pre></div>
 
@@ -842,7 +854,7 @@ agentcore deploy</code></pre></div>
 response = client.invoke_harness(
     harnessArn=HARNESS_ARN,
     runtimeSessionId=SESSION_ID,
-    model={"bedrockModelConfig": {"modelId": "us.anthropic.claude-sonnet-4-5-20250514-v1:0"}},
+    model={"bedrockModelConfig": {"modelId": "us.anthropic.claude-sonnet-4-5-20250929-v1:0"}},
     messages=[{"role": "user", "content": [{"text": "Analyze this codebase."}]}],
 )
 
@@ -852,7 +864,7 @@ response = client.invoke_harness(
     runtimeSessionId=SESSION_ID,
     model={
         "bedrockModelConfig": {
-            "modelId": "openai.gpt-4o",
+            "modelId": "openai.gpt-oss-120b-1:0",
             "apiFormat": "responses",
             "additionalParams": {"reasoning": {"effort": "high"}},
         }
@@ -880,7 +892,7 @@ response = client.invoke_harness(
 
 # Turn 1: Bedrock, harness default API format
 agentcore invoke --harness my_agent \
-  --model-id us.anthropic.claude-sonnet-4-5-20250514-v1:0 \
+  --model-id us.anthropic.claude-sonnet-4-5-20250929-v1:0 \
   --session-id "$SESSION_ID" \
   "Analyze this codebase and identify performance bottlenecks."
 

@@ -453,6 +453,20 @@ agentcore dev --logs          # non-interactive, logs to stdout
 
 If you never specify a model, the harness uses Claude Sonnet 4.6 on Bedrock (`global.anthropic.claude-sonnet-4-6`). Make that explicit and add instructions.
 
+> **Warning — Do not guess the model id — list them**
+>
+> Anthropic model ids are inconsistent about the dated `-YYYYMMDD-v1:0` suffix. Sonnet 4.6 has none (`us.anthropic.claude-sonnet-4-6`); Sonnet 4.5 does (`us.anthropic.claude-sonnet-4-5-20250929-v1:0`); Opus 4.5 does (`us.anthropic.claude-opus-4-5-20251101-v1:0`). Inventing a plausible-looking suffix produces a runtime failure, not a deploy-time one — the harness deploys clean and fails on first invocation:
+>
+> `ValidationException: The provided model identifier is invalid.`
+>
+> Always copy the id from the live list rather than from memory or a blog post:
+
+```bash
+aws bedrock list-inference-profiles --region "$AWS_REGION" \
+  --query "inferenceProfileSummaries[?contains(inferenceProfileId,'sonnet')].inferenceProfileId" \
+  --output text
+```
+
 > **Warning — Every model needs its own agreement**
 >
 > Marketplace agreements are per model, not per account. The moment you point a harness at a model you have not used before — here, or in the per-call override in Step 2 — repeat Lab 01 Step 5 for that model id first, or the invocation fails with the misleading `aws-marketplace:ViewSubscriptions` error. Switching between inference profiles of the *same* model (`global.` ↔ `us.`) needs nothing new.
@@ -481,7 +495,7 @@ If you never specify a model, the harness uses Claude Sonnet 4.6 on Bedrock (`gl
 ```bash
 agentcore add harness \
   --name research_agent \
-  --model-id us.anthropic.claude-sonnet-4-6-20250514-v1:0 \
+  --model-id us.anthropic.claude-sonnet-4-6 \
   --system-prompt "You are a research assistant. Cite sources." \
   --tools agentcore_browser
 
@@ -577,7 +591,7 @@ On `openAiModelConfig` the field behaves ordinarily: it picks the protocol only 
 # Bedrock model through the OpenAI-compatible Responses API
 agentcore add harness --name research_agent \
   --model-provider bedrock \
-  --model-id us.anthropic.claude-sonnet-4-5-20250514-v1:0 \
+  --model-id us.anthropic.claude-sonnet-4-5-20250929-v1:0 \
   --api-format responses
 agentcore deploy
 ```
@@ -647,7 +661,7 @@ This is the exercise that makes the harness click. Three turns, three different 
 response = client.invoke_harness(
     harnessArn=HARNESS_ARN,
     runtimeSessionId=SESSION_ID,
-    model={"bedrockModelConfig": {"modelId": "us.anthropic.claude-sonnet-4-5-20250514-v1:0"}},
+    model={"bedrockModelConfig": {"modelId": "us.anthropic.claude-sonnet-4-5-20250929-v1:0"}},
     messages=[{"role": "user", "content": [{"text": "Analyze this codebase."}]}],
 )
 
@@ -657,7 +671,7 @@ response = client.invoke_harness(
     runtimeSessionId=SESSION_ID,
     model={
         "bedrockModelConfig": {
-            "modelId": "openai.gpt-4o",
+            "modelId": "openai.gpt-oss-120b-1:0",
             "apiFormat": "responses",
             "additionalParams": {"reasoning": {"effort": "high"}},
         }
@@ -689,7 +703,7 @@ SESSION_ID="$(uuidgen)"
 
 # Turn 1: Bedrock, harness default API format
 agentcore invoke --harness my_agent \
-  --model-id us.anthropic.claude-sonnet-4-5-20250514-v1:0 \
+  --model-id us.anthropic.claude-sonnet-4-5-20250929-v1:0 \
   --session-id "$SESSION_ID" \
   "Analyze this codebase and identify performance bottlenecks."
 

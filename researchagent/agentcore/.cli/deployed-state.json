@@ -11,10 +11,19 @@
             "harnessVersion": 1,
             "agentRuntimeArn": "arn:aws:bedrock-agentcore:us-west-2:643045476917:runtime/harness_researchagent_researchagent-wb7GZL92B3",
             "provisioner": "cloudformation"
+          },
+          "research_agent": {
+            "harnessId": "researchagent_research_agent-8UuTIzPrMX",
+            "harnessArn": "arn:aws:bedrock-agentcore:us-west-2:643045476917:harness/researchagent_research_agent-8UuTIzPrMX",
+            "roleArn": "arn:aws:iam::643045476917:role/researchagent_research_agent",
+            "status": "READY",
+            "harnessVersion": 3,
+            "agentRuntimeArn": "arn:aws:bedrock-agentcore:us-west-2:643045476917:runtime/harness_researchagent_research_agent-Nfd5JTHyhZ",
+            "provisioner": "cloudformation"
           }
         },
         "stackName": "AgentCore-researchagent-default",
-        "deployHash": "0a1786a5242328bb"
+        "deployHash": "e37ee749d3cb6fd6"
       }
     }
   }
